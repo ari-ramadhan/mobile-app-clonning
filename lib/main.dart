@@ -13,6 +13,8 @@ import 'package:instagram_flutter/utils/colors.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+
+  // menginisialiisasi modul firebase pada aplikasi dengan pengecekan platform
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
     await Firebase.initializeApp(
@@ -34,6 +36,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // melayani pengupdatean data secara realtime dengan mengecek perubahan data dari firebase firestore
     return MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
       child: MaterialApp(
@@ -41,9 +44,6 @@ class MyApp extends StatelessWidget {
           title: 'Instagram Clone',
           theme: ThemeData.dark()
               .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-          // home: const ResponsiveLayoutScreen(
-          //     webScreenLayout: WebScreenLayout(),
-          //     mobileScreenLayout: MobileScreenLayout()),
           home: StreamBuilder(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: ((context, snapshot) {

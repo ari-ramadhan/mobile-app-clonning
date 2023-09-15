@@ -50,6 +50,7 @@ class _MobileScreenLayoutState extends State<MobileScreenLayout> {
         onPageChanged: onPageChanged,
       ),
       bottomNavigationBar: CupertinoTabBar(
+        height: 65,
         backgroundColor: mobileBackgroundColor,
         items: [
           BottomNavigationBarItem(

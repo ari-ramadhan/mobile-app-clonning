@@ -1,0 +1,17 @@
+Konsep aplikasi Instagram Clone dari Video freecodecamp:
+- Dibuat dengan flutter dengan Firebase
+- Dibuat dengan fungsi (sejauh ini) autentikasi login, sign up, upload postingan, dan menampilkan feed
+- Struktur Firestore :
+    users - menyimpan data pengguna :
+        - collection users ini akan berisi document dengan penamaan yang diambil dari uid user pada autentikasi
+        - didalam tiap document terdapat field field seperti, bio, email, followers, following, photoUrl, uid, dan username
+        - collection ini terkait dengan folder profilePics pada firebase Storage yang menyimpan foto profil dari users,
+          logikanya adalah 1 users hanya memiliki 1 foto profil
+    posts - menyimpan data postingan :
+        - collection posts ini akan berisi document dengan penamaan acak yang disiapkan pada kode program
+        - didalam tiap document terdapat field field seperti, datePublished, description, likes,
+          postId (sama dengan nama dokumen yang mewakili), postUrl (url penyimpanan foto dari post pada storage),
+          profImage (foto profil dari user yang menunggah post), beserta username nya
+        - collection ini terkait dengan folder posts, lalu didalam folder tersebut terdapat lagi sebuah sub folder
+          dengan sistem penamaan yang diambil dari uid pengguna yang memiliki post, jadi struktur nya akan seperti posts/{uid-pengguna}/uid-baru-dari-generate-otomatis,
+          collection ini menyimpan foto yang terunggah dengan postingan, dengan logika 1 user memiliki banyak post, dan 1 post hanya memiliki 1 foto
