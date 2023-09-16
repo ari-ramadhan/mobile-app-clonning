@@ -2,7 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
+import 'package:instagram_flutter/utils/utils.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -54,11 +56,17 @@ class _SearchScreenState extends State<SearchScreen> {
                   return ListView.builder(
                     itemCount: snapshot.data!.docs.length,
                     itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(snapshot.data!.docs[index]['username']),
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(
-                              snapshot.data!.docs[index]['photoUrl']),
+                      return InkWell(
+                        onTap: () => nextScreen(
+                            context,
+                            ProfileScreen(
+                                uid: snapshot.data!.docs[index]['uid'])),
+                        child: ListTile(
+                          title: Text(snapshot.data!.docs[index]['username']),
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(
+                                snapshot.data!.docs[index]['photoUrl']),
+                          ),
                         ),
                       );
                     },
@@ -72,14 +80,16 @@ class _SearchScreenState extends State<SearchScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   return StaggeredGridView.countBuilder(
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 6,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
                       staggeredTileBuilder: (index) => StaggeredTile.count(
                           (index % 7 == 0) ? 2 : 1, (index % 7 == 0) ? 2 : 1),
                       crossAxisCount: 3,
                       itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (context, index) =>
-                          Image.network(snapshot.data!.docs[index]['postUrl'], fit: BoxFit.cover,));
+                      itemBuilder: (context, index) => Image.network(
+                            snapshot.data!.docs[index]['postUrl'],
+                            fit: BoxFit.cover,
+                          ));
                 },
               ));
   }
