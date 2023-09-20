@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
+import 'package:instagram_flutter/utils/global_variable.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     return Scaffold(
         appBar: AppBar(
           backgroundColor: mobileBackgroundColor,
@@ -82,8 +85,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   return StaggeredGridView.countBuilder(
                       mainAxisSpacing: 6,
                       crossAxisSpacing: 6,
-                      staggeredTileBuilder: (index) => StaggeredTile.count(
-                          (index % 7 == 0) ? 2 : 1, (index % 7 == 0) ? 2 : 1),
+                      staggeredTileBuilder: (index) => width > webScreenSize
+                          ? StaggeredTile.count((index % 7 == 0) ? 1 : 1,
+                              (index % 7 == 0) ? 1 : 1)
+                          : StaggeredTile.count((index % 7 == 0) ? 2 : 1,
+                              (index % 7 == 0) ? 2 : 1),
                       crossAxisCount: 3,
                       itemCount: snapshot.data!.docs.length,
                       itemBuilder: (context, index) => Image.network(
