@@ -4,6 +4,7 @@ import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/comments_screen.dart';
+import 'package:instagram_flutter/screens/like_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/global_variable.dart';
 import 'package:instagram_flutter/utils/utils.dart';
@@ -77,7 +78,7 @@ class _PostCardState extends State<PostCard> {
                     children: [
                       Text(
                         widget.snap['username'],
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       )
                     ],
                   ),
@@ -208,9 +209,14 @@ class _PostCardState extends State<PostCard> {
                       .textTheme
                       .subtitle2!
                       .copyWith(fontWeight: FontWeight.w800),
-                  child: Text(
-                    "${widget.snap['likes'].length} likes",
-                    style: Theme.of(context).textTheme.bodyText2,
+                  child: InkWell(
+                    onTap: () {
+                      nextScreen(context, LikeScreen(snap: widget.snap,));
+                    },
+                    child: Text(
+                      "${widget.snap['likes'].length} likes",
+                      style: Theme.of(context).textTheme.bodyText2,
+                    ),
                   ),
                 ),
                 Container(
@@ -230,12 +236,14 @@ class _PostCardState extends State<PostCard> {
                       ])),
                 ),
                 InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    nextScreen(context, CommentsScreen(snap: widget.snap));
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      'View all $commentLen comments',
-                      style: TextStyle(fontSize: 16, color: secondaryColor),
+                      commentLen > 0 ? 'View all $commentLen comments' : 'No comment recently',
+                      style: const TextStyle(fontSize: 16, color: secondaryColor),
                     ),
                   ),
                 ),
