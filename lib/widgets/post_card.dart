@@ -56,7 +56,7 @@ class _PostCardState extends State<PostCard> {
                 width > webScreenSize ? secondaryColor : mobileBackgroundColor),
         color: mobileBackgroundColor,
       ),
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         children: [
           //HEADER SECTION
@@ -211,10 +211,16 @@ class _PostCardState extends State<PostCard> {
                       .copyWith(fontWeight: FontWeight.w800),
                   child: InkWell(
                     onTap: () {
-                      nextScreen(context, LikeScreen(snap: widget.snap,));
+                      nextScreen(
+                          context,
+                          LikeScreen(
+                            snap: widget.snap,
+                          ));
                     },
                     child: Text(
-                      "${widget.snap['likes'].length} likes",
+                      widget.snap['likes'].length > 0
+                          ? "${widget.snap['likes'].length} likes"
+                          : "no likes",
                       style: Theme.of(context).textTheme.bodyText2,
                     ),
                   ),
@@ -224,7 +230,7 @@ class _PostCardState extends State<PostCard> {
                   padding: const EdgeInsets.only(top: 8),
                   child: RichText(
                       text: TextSpan(
-                          style: TextStyle(color: primaryColor),
+                          style: const TextStyle(color: primaryColor),
                           children: [
                         TextSpan(
                             text: widget.snap['username'],
@@ -242,17 +248,77 @@ class _PostCardState extends State<PostCard> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      commentLen > 0 ? 'View all $commentLen comments' : 'No comment recently',
-                      style: const TextStyle(fontSize: 16, color: secondaryColor),
+                      commentLen > 0
+                          ? 'View all $commentLen comments'
+                          : 'No comment recently',
+                      style:
+                          const TextStyle(fontSize: 16, color: secondaryColor),
                     ),
                   ),
                 ),
+                commentLen > 0
+                    ? Container(
+                      height: 20,
+                      child: StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('posts')
+                              .doc(widget.snap['postId'])
+                              .collection('comments')
+                              .orderBy('datePublished', descending: true)
+                              .limit(1)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            var snapshit = snapshot.data!.docs[0].data();
+
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return Text(snapshot.error.toString());
+                            }
+
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      RichText(
+                                        text: TextSpan(
+                                          children: [
+                                            TextSpan(
+                                                text: snapshit['name'],
+                                                style: const TextStyle(
+                                                    fontWeight: FontWeight.bold)),
+                                            TextSpan(
+                                              text: ' ${snapshit['text']}',
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                    onPressed: () {},
+                                    icon: const Icon(
+                                      Icons.favorite,
+                                      size: 13,
+                                    ))
+                              ],
+                            );
+                          },
+                        ),
+                    )
+                    : Container(),
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     DateFormat.yMMMd()
                         .format(widget.snap['datePublished'].toDate()),
-                    style: TextStyle(fontSize: 16, color: secondaryColor),
+                    style: const TextStyle(fontSize: 16, color: secondaryColor),
                   ),
                 ),
               ],

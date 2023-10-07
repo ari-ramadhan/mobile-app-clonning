@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/auth_methods.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/login_screen.dart';
+import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 import 'package:instagram_flutter/widgets/follow_button.dart';
@@ -50,8 +51,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       following = userSnap.data()!['following'].length;
       followers = userSnap.data()!['followers'].length;
       postLen = postSnap.docs.length;
-      userData = userSnap.data()!;
-      setState(() {});
+      setState(() {
+        userData = userSnap.data()!;
+      });
     } catch (e) {
       showSnackBar(e.toString(), context);
     }
@@ -112,7 +114,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             borderColor: Colors.grey,
                                             function: () async {
                                               AuthMethods().signOut();
-                                              nextScreenReplacement(context, const LoginScreen());
+                                              nextScreenReplacement(
+                                                  context, const LoginScreen());
                                             },
                                           )
                                         : isFollowing
@@ -128,10 +131,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                               .currentUser!.uid,
                                                           userData['uid']);
 
-                                                          setState(() {
-                                                            isFollowing = false;
-                                                            followers--;
-                                                          });
+                                                  setState(() {
+                                                    isFollowing = false;
+                                                    followers--;
+                                                  });
                                                 },
                                               )
                                             : FollowButton(
@@ -202,10 +205,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       itemBuilder: (context, index) {
                         DocumentSnapshot snap = snapshot.data!.docs[index];
 
-                        return Container(
-                          child: Image(
-                            fit: BoxFit.cover,
-                            image: NetworkImage(snap['postUrl']),
+                        return InkWell(
+                          onTap: () {
+                            nextScreen(context, SinglePostScreen());
+                          },
+                          child: Container(
+                            child: Image(
+                              fit: BoxFit.cover,
+                              image: NetworkImage(snap['postUrl']),
+                            ),
                           ),
                         );
                       },
