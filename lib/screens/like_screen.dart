@@ -127,7 +127,7 @@ class _LikeScreenState extends State<LikeScreen> {
                                 return ElevatedButton(
                                   style: ElevatedButton.styleFrom(
                                       side: isFollowing
-                                          ? BorderSide(
+                                          ? const BorderSide(
                                               width: 0.3, color: Colors.white)
                                           : null,
                                       backgroundColor: isFollowing

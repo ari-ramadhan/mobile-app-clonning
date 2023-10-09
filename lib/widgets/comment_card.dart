@@ -1,6 +1,9 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/models/user.dart';
 import 'package:instagram_flutter/providers/user_provider.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
+import 'package:instagram_flutter/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -21,10 +24,13 @@ class _CommentCardState extends State<CommentCard> {
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: NetworkImage(
-                widget.snap['profilePic']),
+          InkWell(
+            onTap: () => nextScreen(context, ProfileScreen(uid: widget.snap['uid'])),
+            child: CircleAvatar(
+              radius: 18,
+              backgroundImage: NetworkImage(
+                  widget.snap['profilePic']),
+            ),
           ),
           Expanded(
             child: Padding(

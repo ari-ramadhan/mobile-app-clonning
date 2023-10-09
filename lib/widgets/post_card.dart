@@ -5,6 +5,7 @@ import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/comments_screen.dart';
 import 'package:instagram_flutter/screens/like_screen.dart';
+import 'package:instagram_flutter/screens/profile_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/global_variable.dart';
 import 'package:instagram_flutter/utils/utils.dart';
@@ -60,61 +61,64 @@ class _PostCardState extends State<PostCard> {
       child: Column(
         children: [
           //HEADER SECTION
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16)
-                .copyWith(right: 0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: NetworkImage(widget.snap['profImage']),
-                ),
-                Expanded(
-                    child: Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.snap['username'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      )
-                    ],
+          InkWell(
+            onTap: () => nextScreen(context, ProfileScreen(uid: widget.snap['uid'])),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16)
+                  .copyWith(right: 0),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundImage: NetworkImage(widget.snap['profImage']),
                   ),
-                )),
-                IconButton(
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                                child: ListView(
-                                    shrinkWrap: true,
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 16),
-                                    children: [
-                                      'Delete',
-                                    ]
-                                        .map((e) => InkWell(
-                                              onTap: () async {
-                                                FirestoreMethods().deletePost(
-                                                    widget.snap['postId']);
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  vertical: 12,
-                                                  horizontal: 16,
+                  Expanded(
+                      child: Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.snap['username'],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  )),
+                  IconButton(
+                      onPressed: () {
+                        showDialog(
+                            context: context,
+                            builder: (context) => Dialog(
+                                  child: ListView(
+                                      shrinkWrap: true,
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 16),
+                                      children: [
+                                        'Delete',
+                                      ]
+                                          .map((e) => InkWell(
+                                                onTap: () async {
+                                                  FirestoreMethods().deletePost(
+                                                      widget.snap['postId']);
+                                                  Navigator.of(context).pop();
+                                                },
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 16,
+                                                  ),
+                                                  child: Text(e),
                                                 ),
-                                                child: Text(e),
-                                              ),
-                                            ))
-                                        .toList()),
-                              ));
-                    },
-                    icon: const Icon(Icons.more_vert))
-              ],
+                                              ))
+                                          .toList()),
+                                ));
+                      },
+                      icon: const Icon(Icons.more_vert))
+                ],
+              ),
             ),
           ),
 
@@ -258,7 +262,6 @@ class _PostCardState extends State<PostCard> {
                 ),
                 commentLen > 0
                     ? Container(
-                      height: 20,
                       child: StreamBuilder(
                           stream: FirebaseFirestore.instance
                               .collection('posts')

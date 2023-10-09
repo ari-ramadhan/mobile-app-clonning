@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:instagram_flutter/models/post.dart';
 import 'package:instagram_flutter/resources/storage_methods.dart';
@@ -32,6 +34,21 @@ class FirestoreMethods {
       res = err.toString();
     }
     return res;
+  }
+
+  Future<void> updateUserProfile(
+      String uid, String newUsername, String newBio) async {
+    String res = 'some error occured';
+    try {
+      final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      if (newUsername.isNotEmpty && newBio.isNotEmpty) {
+        await userRef.update({'username': newUsername, 'bio': newBio});
+      } else {
+        print(res);
+      }
+    } catch (e) {
+      print(e.toString());
+    }
   }
 
   Future<void> likePost(String postId, String uid, List likes) async {
@@ -109,5 +126,35 @@ class FirestoreMethods {
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  Future<String> changeProfilePict(String uid, Uint8List file) async {
+    final FirebaseStorage _storage = FirebaseStorage.instance;
+    final FirebaseAuth _auth = FirebaseAuth.instance;
+
+    String res = 'some error occured';
+    try {
+      if (uid.isEmpty || file != null) {
+        await _firestore.collection('users').doc(uid).update({'photoUrl': ''});
+        await _storage
+            .ref()
+            .child('profilePics')
+            .child(_auth.currentUser!.uid)
+            .delete();
+
+        String photoUrl = await StorageMethods()
+            .uploadImageToStorage('profilePics', file, false);
+
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .update({'photoUrl': photoUrl});
+        res = 'success';
+      }
+    } catch (e) {
+      res = e.toString();
+    }
+
+    return res;
   }
 }

@@ -3,11 +3,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/auth_methods.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
+import 'package:instagram_flutter/screens/edit_profile_page.dart';
 import 'package:instagram_flutter/screens/login_screen.dart';
 import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 import 'package:instagram_flutter/widgets/follow_button.dart';
+import 'package:instagram_flutter/widgets/my_flutter_app_icons.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -69,9 +71,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircularProgressIndicator(),
           )
         : Scaffold(
+            // endDrawer: widget.uid == FirebaseAuth.instance.currentUser!.uid
+            //     ? Drawer(
+            //         child: ListView(
+            //           children: [
+            //             ListTile(
+            //               onTap: () {
+            //                 AuthMethods().signOut();
+            //                 nextScreenReplacement(context, const LoginScreen());
+            //               },
+            //               leading: Icon(Icons.logout),
+            //               title: const Text('Sign Out'),
+            //             )
+            //           ],
+            //         ),
+            //       )
+            //     : null,
+            // endDrawer: IconButton(
+            //   icon: Icon(Icons.telegram),
+            //   onPressed: () => showModalBottomSheet<void>(
+            //     context: context,
+            //     builder: (BuildContext context) {
+            //       return Container(
+            //         height: 200,
+            //         color: Colors.amber,
+            //         child: Center(
+            //           child: Column(
+            //             mainAxisAlignment: MainAxisAlignment.center,
+            //             mainAxisSize: MainAxisSize.min,
+            //             children: <Widget>[
+            //               const Text('Modal BottomSheet'),
+            //               ElevatedButton(
+            //                 child: const Text('Close BottomSheet'),
+            //                 onPressed: () => Navigator.pop(context),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // ),
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
-              title: Text(userData['username']),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(userData['username']),
+                  InkWell(
+                    onTap: () {
+                      showModalBottomSheet<void>(
+                        // shape: RoundedRectangleBorder(
+                        //   borderRadius: BorderRadius.circular(10.0),
+                        // ),
+                        // backgroundColor: Colors.white,
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Container(
+                              decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(20),
+                                      topRight: Radius.circular(20))),
+                              height: 200,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(13.0),
+                                      child: Text(
+                                        'Menu',
+                                        style: TextStyle(fontSize: 20),
+                                      ),
+                                    ),
+                                  ),
+                                  ListTile(
+                                    leading: Icon(Icons.logout),
+                                    title: Text('Sign Out'),
+                                    onTap: () {
+                                      AuthMethods().signOut();
+                                      nextScreenReplacement(
+                                          context, const LoginScreen());
+                                    },
+                                  ),
+                                ],
+                              ));
+                        },
+                      );
+                    },
+                    child: Icon(
+                      (MyFlutterApp.align_justify),
+                    ),
+                  ),
+                ],
+              ),
               centerTitle: false,
             ),
             body: ListView(
@@ -107,15 +200,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     FirebaseAuth.instance.currentUser!.uid ==
                                             widget.uid
                                         ? FollowButton(
-                                            text: 'Sign out',
+                                            text: 'Edit Profile',
                                             backgroundColor:
                                                 mobileBackgroundColor,
                                             textColor: primaryColor,
                                             borderColor: Colors.grey,
                                             function: () async {
-                                              AuthMethods().signOut();
-                                              nextScreenReplacement(
-                                                  context, const LoginScreen());
+                                              nextScreen(context,
+                                                  const EditProfilePage());
                                             },
                                           )
                                         : isFollowing
@@ -243,6 +335,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: 15, fontWeight: FontWeight.w400, color: Colors.grey),
         )
       ],
+    );
+  }
+}
+
+class BottomSheetExample extends StatelessWidget {
+  const BottomSheetExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ElevatedButton(
+        child: const Text('showModalBottomSheet'),
+        onPressed: () {
+          showModalBottomSheet<void>(
+            context: context,
+            builder: (BuildContext context) {
+              return Container(
+                height: 200,
+                color: Colors.amber,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const Text('Modal BottomSheet'),
+                      ElevatedButton(
+                        child: const Text('Close BottomSheet'),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
