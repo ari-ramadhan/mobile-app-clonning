@@ -10,6 +10,7 @@ import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
 import 'package:instagram_flutter/widgets/follow_button.dart';
 import 'package:instagram_flutter/widgets/my_flutter_app_icons.dart';
+import 'package:instagram_flutter/widgets/person_card.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String uid;
@@ -26,6 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   int following = 0;
   bool isFollowing = false;
   bool isLoading = false;
+  bool showFindPeople = true;
 
   @override
   void initState() {
@@ -71,47 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: CircularProgressIndicator(),
           )
         : Scaffold(
-            // endDrawer: widget.uid == FirebaseAuth.instance.currentUser!.uid
-            //     ? Drawer(
-            //         child: ListView(
-            //           children: [
-            //             ListTile(
-            //               onTap: () {
-            //                 AuthMethods().signOut();
-            //                 nextScreenReplacement(context, const LoginScreen());
-            //               },
-            //               leading: Icon(Icons.logout),
-            //               title: const Text('Sign Out'),
-            //             )
-            //           ],
-            //         ),
-            //       )
-            //     : null,
-            // endDrawer: IconButton(
-            //   icon: Icon(Icons.telegram),
-            //   onPressed: () => showModalBottomSheet<void>(
-            //     context: context,
-            //     builder: (BuildContext context) {
-            //       return Container(
-            //         height: 200,
-            //         color: Colors.amber,
-            //         child: Center(
-            //           child: Column(
-            //             mainAxisAlignment: MainAxisAlignment.center,
-            //             mainAxisSize: MainAxisSize.min,
-            //             children: <Widget>[
-            //               const Text('Modal BottomSheet'),
-            //               ElevatedButton(
-            //                 child: const Text('Close BottomSheet'),
-            //                 onPressed: () => Navigator.pop(context),
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //       );
-            //     },
-            //   ),
-            // ),
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
               title: Row(
@@ -121,10 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   InkWell(
                     onTap: () {
                       showModalBottomSheet<void>(
-                        // shape: RoundedRectangleBorder(
-                        //   borderRadius: BorderRadius.circular(10.0),
-                        // ),
-                        // backgroundColor: Colors.white,
                         context: context,
                         builder: (BuildContext context) {
                           return Container(
@@ -159,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       );
                     },
-                    child: Icon(
+                    child: const Icon(
                       (MyFlutterApp.align_justify),
                     ),
                   ),
@@ -199,19 +156,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   children: [
                                     FirebaseAuth.instance.currentUser!.uid ==
                                             widget.uid
-                                        ? FollowButton(
-                                            text: 'Edit Profile',
-                                            backgroundColor:
-                                                mobileBackgroundColor,
-                                            textColor: primaryColor,
-                                            borderColor: Colors.grey,
-                                            function: () async {
-                                              nextScreen(context,
-                                                  const EditProfilePage());
-                                            },
-                                          )
+                                        ? Row(children: [
+                                            FollowButton(
+                                              width: 210,
+                                              text: 'Edit Profile',
+                                              backgroundColor:
+                                                  mobileBackgroundColor,
+                                              textColor: primaryColor,
+                                              borderColor: Colors.grey,
+                                              function: () async {
+                                                nextScreen(context,
+                                                    const EditProfilePage());
+                                              },
+                                            ),
+                                            InkWell(
+                                              onTap: () {
+                                                setState(() {
+                                                  showFindPeople =
+                                                      !showFindPeople;
+                                                });
+                                              },
+                                              child: Container(
+                                                  decoration: BoxDecoration(
+                                                      color:
+                                                          mobileBackgroundColor,
+                                                      border: Border.all(
+                                                          color: Colors.grey),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              5)),
+                                                  padding:
+                                                      const EdgeInsets.all(4.0),
+                                                  child: showFindPeople
+                                                      ? const Icon(
+                                                          Icons.person_add,
+                                                          size: 16)
+                                                      : const Icon(
+                                                          Icons
+                                                              .person_add_outlined,
+                                                          size: 16)),
+                                            )
+                                          ])
                                         : isFollowing
                                             ? FollowButton(
+                                                width: 250,
                                                 text: 'Unfollow',
                                                 backgroundColor: Colors.white,
                                                 textColor: Colors.black,
@@ -230,6 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 },
                                               )
                                             : FollowButton(
+                                                width: 250,
                                                 text: 'Follow',
                                                 backgroundColor: Colors.blue,
                                                 textColor: Colors.white,
@@ -259,7 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         padding: const EdgeInsets.only(top: 15),
                         child: Text(
                           userData['username'],
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                       Container(
@@ -272,6 +261,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
+                showFindPeople ?
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: const [
+                          Text(
+                            'Find peoples',
+                            style: TextStyle(letterSpacing: 0.3, fontSize: 15),
+                          ),
+                          Text(
+                            'Show all',
+                            style: TextStyle(
+                                letterSpacing: 0.3,
+                                fontSize: 15,
+                                color: Colors.blue),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      SingleChildScrollView(
+                        padding: EdgeInsets.all(1),
+                        scrollDirection: Axis.horizontal,
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            }
+
+                            if (snapshot.hasError) {
+                              return Center(
+                                child:
+                                    Text('Error: ${snapshot.error.toString()}'),
+                              );
+                            }
+
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return Text('Tidak ada data pengguna.');
+                            }
+
+                            return Row(
+
+                              children: snapshot.data!.docs.map((doc) {
+                                final userData =
+                                    doc.data() as Map<String, dynamic>;
+                                return PersonCard(snap: userData,);
+                              }).toList(),
+                            );
+                          },
+                        ),
+                      )
+                    ],
+                  ),
+                ) : Container(),
                 const Divider(),
                 FutureBuilder(
                   future: FirebaseFirestore.instance

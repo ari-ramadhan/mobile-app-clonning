@@ -105,9 +105,20 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
     return _file == null
         ? Center(
-            child: IconButton(
-                onPressed: () => _selectImage(context),
-                icon: const Icon(Icons.upload)),
+            child: InkWell(
+              onTap: () => _selectImage(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                      Icon(Icons.upload),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text('Make a post!')
+                ],
+              ),
+            ),
           )
         : Scaffold(
             appBar: AppBar(
