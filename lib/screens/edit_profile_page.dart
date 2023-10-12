@@ -22,6 +22,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isLoading = false;
   TextEditingController usernameController = TextEditingController();
   TextEditingController bioController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   Uint8List? _file;
 
   getData() async {
@@ -37,6 +38,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         userData = userSnap.data()!;
         usernameController.text = userData['username'];
         bioController.text = userData['bio'];
+        emailController.text = userData['email'];
       });
     } catch (e) {
       showSnackBar(e.toString(), context);
@@ -141,7 +143,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             IconButton(
                 onPressed: () async {
                   FirestoreMethods().updateUserProfile(userData['uid'],
-                      usernameController.text, bioController.text);
+                      usernameController.text, bioController.text, emailController.text);
                   nextScreenReplacement(
                       context, ProfileScreen(uid: userData['uid']));
                 },
@@ -180,32 +182,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                         NetworkImage(userData['photoUrl']),
                                   )
                                 : CircleAvatar(
-                                  radius: 45,
-                                  backgroundImage: MemoryImage(_file!),
-                                ),
+                                    radius: 45,
+                                    backgroundImage: MemoryImage(_file!),
+                                  ),
                             const SizedBox(
                               height: 18,
                             ),
-                            _file == null ?
-                            const Text(
-                                  'Edit Photo',
-                                  style: TextStyle(color: Colors.blue),
-                                ):
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Edit Photo',
-                                  style: TextStyle(color: Colors.blue),
-                                ),
-                                const SizedBox(width: 10,),
-                                ElevatedButton(onPressed: (){
-                                  postImage();
-                                  nextScreen(context, MyApp());
-                                }, child: const Text('Change'))
-
-                              ],
-                            )
+                            _file == null
+                                ? const Text(
+                                    'Edit Photo',
+                                    style: TextStyle(color: Colors.blue),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Text(
+                                        'Edit Photo',
+                                        style: TextStyle(color: Colors.blue),
+                                      ),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      ElevatedButton(
+                                          onPressed: () {
+                                            postImage();
+                                            nextScreen(context, MyApp());
+                                          },
+                                          child: const Text('Change'))
+                                    ],
+                                  )
                           ],
                         ),
                       ),
@@ -221,7 +226,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       decoration: const InputDecoration(
                           labelText: 'Bio',
                           labelStyle: TextStyle(color: Colors.white)),
-                    )
+                    ),
+                    TextFormField(
+                      controller: emailController,
+                      decoration: const InputDecoration(
+                          labelText: 'Email',
+                          labelStyle: TextStyle(color: Colors.white)),
+                    ),
                   ],
                 ),
               ));

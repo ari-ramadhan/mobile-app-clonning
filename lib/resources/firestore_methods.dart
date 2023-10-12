@@ -37,12 +37,14 @@ class FirestoreMethods {
   }
 
   Future<void> updateUserProfile(
-      String uid, String newUsername, String newBio) async {
+      String uid, String newUsername, String newBio, String newEmail) async {
     String res = 'some error occured';
     try {
       final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
-      if (newUsername.isNotEmpty && newBio.isNotEmpty) {
-        await userRef.update({'username': newUsername, 'bio': newBio});
+
+      if (newUsername.isNotEmpty && newBio.isNotEmpty && newEmail.isNotEmpty) {
+        await userRef.update({'username': newUsername, 'bio': newBio, 'email': newEmail});
+        await FirebaseAuth.instance.currentUser!.updateEmail(newEmail);
       } else {
         print(res);
       }

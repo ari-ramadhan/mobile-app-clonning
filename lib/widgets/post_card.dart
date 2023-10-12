@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:instagram_flutter/models/user.dart';
+import 'package:instagram_flutter/models/user.dart' as model;
 import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/comments_screen.dart';
@@ -47,7 +48,7 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    final model.User user = Provider.of<UserProvider>(context).getUser;
     final width = MediaQuery.of(context).size.width;
 
     return Container(
@@ -62,7 +63,8 @@ class _PostCardState extends State<PostCard> {
         children: [
           //HEADER SECTION
           InkWell(
-            onTap: () => nextScreen(context, ProfileScreen(uid: widget.snap['uid'])),
+            onTap: () =>
+                nextScreen(context, ProfileScreen(uid: widget.snap['uid'])),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16)
                   .copyWith(right: 0),
@@ -86,6 +88,56 @@ class _PostCardState extends State<PostCard> {
                       ],
                     ),
                   )),
+                  widget.snap['uid'] != FirebaseAuth.instance.currentUser!.uid
+                      ? StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(FirebaseAuth.instance.currentUser!.uid)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+
+                            if (snapshot.hasError) {
+                              return Text('Error: ${snapshot.error}');
+                            }
+
+                            if (!snapshot.hasData || !snapshot.data!.exists) {
+                              return const Text('Current user does not exist.');
+                            }
+
+                            final currentUserData =
+                                snapshot.data!.data() as Map<String, dynamic>;
+                            final isFollowing = currentUserData['following']
+                                .contains(widget.snap['uid']);
+
+                            return ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                  side: isFollowing
+                                      ? const BorderSide(
+                                          width: 0.3, color: Colors.white)
+                                      : null,
+                                  backgroundColor:
+                                      isFollowing ? Colors.black : Colors.blue),
+                              onPressed: () async {
+                                if (isFollowing) {
+                                  await FirestoreMethods().followUser(
+                                      FirebaseAuth.instance.currentUser!.uid,
+                                      widget.snap['uid']);
+                                } else {
+                                  await FirestoreMethods().followUser(
+                                      FirebaseAuth.instance.currentUser!.uid,
+                                      widget.snap['uid']);
+                                }
+                              },
+                              child: Text(isFollowing ? 'Followed' : 'Follow'),
+                            );
+                          },
+                        )
+                      : Container(),
                   IconButton(
                       onPressed: () {
                         showDialog(
@@ -105,8 +157,8 @@ class _PostCardState extends State<PostCard> {
                                                   Navigator.of(context).pop();
                                                 },
                                                 child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
                                                     vertical: 12,
                                                     horizontal: 16,
                                                   ),
@@ -262,7 +314,7 @@ class _PostCardState extends State<PostCard> {
                 ),
                 commentLen > 0
                     ? Container(
-                      child: StreamBuilder(
+                        child: StreamBuilder(
                           stream: FirebaseFirestore.instance
                               .collection('posts')
                               .doc(widget.snap['postId'])
@@ -285,7 +337,8 @@ class _PostCardState extends State<PostCard> {
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       RichText(
@@ -294,7 +347,8 @@ class _PostCardState extends State<PostCard> {
                                             TextSpan(
                                                 text: snapshit['name'],
                                                 style: const TextStyle(
-                                                    fontWeight: FontWeight.bold)),
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                             TextSpan(
                                               text: ' ${snapshit['text']}',
                                             ),
@@ -314,7 +368,7 @@ class _PostCardState extends State<PostCard> {
                             );
                           },
                         ),
-                    )
+                      )
                     : Container(),
                 Container(
                   padding: const EdgeInsets.only(top: 8),
