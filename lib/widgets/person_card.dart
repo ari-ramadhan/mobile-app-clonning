@@ -8,9 +8,10 @@ import 'package:instagram_flutter/utils/utils.dart';
 class PersonCard extends StatefulWidget {
   // final Map<String, dynamic> userData;
   final snap;
+  final profileUid;
   const PersonCard({
     Key? key,
-    required this.snap,
+    required this.snap, required this.profileUid,
   }) : super(key: key);
 
   @override
@@ -20,7 +21,7 @@ class PersonCard extends StatefulWidget {
 class _PersonCardState extends State<PersonCard> {
   @override
   Widget build(BuildContext context) {
-    return widget.snap['uid'] != FirebaseAuth.instance.currentUser!.uid
+    return widget.snap['uid'] != FirebaseAuth.instance.currentUser!.uid && widget.snap['uid'] != widget.profileUid
         ? InkWell(
           onTap: () {
             nextScreen(context, ProfileScreen(uid: widget.snap['uid']));

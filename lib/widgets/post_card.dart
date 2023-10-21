@@ -302,7 +302,7 @@ class _PostCardState extends State<PostCard> {
                     nextScreen(context, CommentsScreen(snap: widget.snap));
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.only(top: 4),
                     child: Text(
                       commentLen > 0
                           ? 'View all $commentLen comments'
@@ -312,66 +312,84 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                 ),
+                const SizedBox(
+                  height: 1,
+                ),
+
+                // LATEST COMMENT SECTION
                 commentLen > 0
-                    ? Container(
-                        child: StreamBuilder(
-                          stream: FirebaseFirestore.instance
-                              .collection('posts')
-                              .doc(widget.snap['postId'])
-                              .collection('comments')
-                              .orderBy('datePublished', descending: true)
-                              .limit(1)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            var snapshit = snapshot.data!.docs[0].data();
+                    ? Column(
+                        children: [
+                          const SizedBox(
+                            height: 4,
+                          ),
+                          StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('posts')
+                                .doc(widget.snap['postId'])
+                                .collection('comments')
+                                .orderBy('datePublished', descending: true)
+                                .limit(1)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              var snapshit = snapshot.data!.docs[0].data();
 
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            if (snapshot.hasError) {
-                              return Text(snapshot.error.toString());
-                            }
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              }
+                              if (snapshot.hasError) {
+                                return Text(snapshot.error.toString());
+                              }
 
-                            return Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      RichText(
-                                        text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                                text: snapshit['name'],
-                                                style: const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            TextSpan(
-                                              text: ' ${snapshit['text']}',
-                                            ),
-                                          ],
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        RichText(
+                                          text: TextSpan(
+                                            children: [
+                                              TextSpan(
+                                                  text: snapshit['name'],
+                                                  style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold)),
+                                              TextSpan(
+                                                text: ' ${snapshit['text']}',
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                IconButton(
-                                    onPressed: () {},
-                                    icon: const Icon(
-                                      Icons.favorite,
-                                      size: 13,
-                                    ))
-                              ],
-                            );
-                          },
-                        ),
+                                  SizedBox(
+                                    height: 20,
+                                    child: IconButton(
+                                        onPressed: () {},
+                                        icon: const Icon(
+                                          Icons.favorite,
+                                          size: 13,
+                                        )),
+                                  )
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(
+                            height: 4,
+                          ),
+                        ],
                       )
                     : Container(),
                 Container(
-                  padding: const EdgeInsets.only(top: 8),
+                  padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     DateFormat.yMMMd()
                         .format(widget.snap['datePublished'].toDate()),

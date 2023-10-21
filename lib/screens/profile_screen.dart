@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/auth_methods.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/edit_profile_page.dart';
+import 'package:instagram_flutter/screens/find_people_page.dart';
 import 'package:instagram_flutter/screens/login_screen.dart';
 import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
@@ -103,8 +104,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   ListTile(
-                                    leading: Icon(Icons.logout),
-                                    title: Text('Sign Out'),
+                                    leading: const Icon(Icons.logout),
+                                    title: const Text('Sign Out'),
                                     onTap: () {
                                       AuthMethods().signOut();
                                       nextScreenReplacement(
@@ -140,16 +141,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Expanded(
                             child: Column(
                               children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    buildStatColumn(postLen, "posts"),
-                                    buildStatColumn(followers, "followers"),
-                                    buildStatColumn(following, "following"),
-                                  ],
+                                StreamBuilder(
+                                  stream: FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(widget.uid)
+                                      .snapshots(),
+                                  builder: (context, snapshot) {
+                                    var userData = snapshot.data!.data()
+                                        as Map<String, dynamic>;
+                                    var followersCount =
+                                        userData['followers']?.length ?? 0;
+                                    var followingCount =
+                                        userData['following']?.length ?? 0;
+                                    return Row(
+                                      mainAxisSize: MainAxisSize.max,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        buildStatColumn(postLen, "posts"),
+                                        buildStatColumn(followersCount, "followers"),
+                                        buildStatColumn(
+                                            followingCount, "following"),
+                                      ],
+                                    );
+                                  },
                                 ),
+                                // Row(
+                                //   mainAxisSize: MainAxisSize.max,
+                                //   mainAxisAlignment:
+                                //       MainAxisAlignment.spaceEvenly,
+                                //   children: [
+                                //     buildStatColumn(postLen, "posts"),
+                                //     buildStatColumn(followers, "followers"),
+                                //     buildStatColumn(following, "following"),
+                                //   ],
+                                // ),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
@@ -198,27 +224,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             )
                                           ])
                                         : isFollowing
-                                            ? FollowButton(
-                                                width: 250,
-                                                text: 'Unfollow',
-                                                backgroundColor: Colors.white,
-                                                textColor: Colors.black,
-                                                borderColor: Colors.grey,
-                                                function: () async {
-                                                  await FirestoreMethods()
-                                                      .followUser(
-                                                          FirebaseAuth.instance
-                                                              .currentUser!.uid,
-                                                          userData['uid']);
+                                            ? Row(
+                                                children: [
+                                                  FollowButton(
+                                                    width: 210,
+                                                    text: 'Unfollow',
+                                                    backgroundColor:
+                                                        Colors.white,
+                                                    textColor: Colors.black,
+                                                    borderColor: Colors.grey,
+                                                    function: () async {
+                                                      await FirestoreMethods()
+                                                          .followUser(
+                                                              FirebaseAuth
+                                                                  .instance
+                                                                  .currentUser!
+                                                                  .uid,
+                                                              userData['uid']);
 
-                                                  setState(() {
-                                                    isFollowing = false;
-                                                    followers--;
-                                                  });
-                                                },
+                                                      setState(() {
+                                                        isFollowing = false;
+                                                        followers--;
+                                                      });
+                                                    },
+                                                  ),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        showFindPeople =
+                                                            !showFindPeople;
+                                                      });
+                                                    },
+                                                    child: Container(
+                                                        decoration: BoxDecoration(
+                                                            color:
+                                                                mobileBackgroundColor,
+                                                            border: Border.all(
+                                                                color: Colors
+                                                                    .grey),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        5)),
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                                4.0),
+                                                        child: showFindPeople
+                                                            ? const Icon(
+                                                                Icons
+                                                                    .person_add,
+                                                                size: 16)
+                                                            : const Icon(
+                                                                Icons.person_add_outlined,
+                                                                size: 16)),
+                                                  )
+                                                ],
                                               )
                                             : FollowButton(
-                                                width: 250,
+                                                width: 210,
                                                 text: 'Follow',
                                                 backgroundColor: Colors.blue,
                                                 textColor: Colors.white,
@@ -229,7 +292,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                           FirebaseAuth.instance
                                                               .currentUser!.uid,
                                                           userData['uid']);
-
                                                   setState(() {
                                                     isFollowing = true;
                                                     followers++;
@@ -261,71 +323,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                showFindPeople ?
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text(
-                            'Find peoples',
-                            style: TextStyle(letterSpacing: 0.3, fontSize: 15),
-                          ),
-                          Text(
-                            'Show all',
-                            style: TextStyle(
-                                letterSpacing: 0.3,
-                                fontSize: 15,
-                                color: Colors.blue),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(
-                        height: 10,
-                      ),
-                      SingleChildScrollView(
-                        padding: EdgeInsets.all(1),
-                        scrollDirection: Axis.horizontal,
-                        child: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection('users')
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
+                showFindPeople
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Find peoples',
+                                  style: TextStyle(
+                                      letterSpacing: 0.3, fontSize: 15),
+                                ),
+                                InkWell(
+                                  onTap: () => nextScreen(
+                                      context,
+                                      FindPeoplePage(
+                                        uid: widget.uid,
+                                      )),
+                                  child: const Text(
+                                    'Show all',
+                                    style: TextStyle(
+                                        letterSpacing: 0.3,
+                                        fontSize: 15,
+                                        color: Colors.blue),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 10,
+                            ),
+                            SingleChildScrollView(
+                              padding: const EdgeInsets.all(1),
+                              scrollDirection: Axis.horizontal,
+                              child: StreamBuilder<QuerySnapshot>(
+                                stream: FirebaseFirestore.instance
+                                    .collection('users')
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
 
-                            if (snapshot.hasError) {
-                              return Center(
-                                child:
-                                    Text('Error: ${snapshot.error.toString()}'),
-                              );
-                            }
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text(
+                                          'Error: ${snapshot.error.toString()}'),
+                                    );
+                                  }
 
-                            if (!snapshot.hasData ||
-                                snapshot.data!.docs.isEmpty) {
-                              return Text('Tidak ada data pengguna.');
-                            }
+                                  if (!snapshot.hasData ||
+                                      snapshot.data!.docs.isEmpty) {
+                                    return const Text(
+                                        'Tidak ada data pengguna.');
+                                  }
 
-                            return Row(
-
-                              children: snapshot.data!.docs.map((doc) {
-                                final userData =
-                                    doc.data() as Map<String, dynamic>;
-                                return PersonCard(snap: userData,);
-                              }).toList(),
-                            );
-                          },
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: snapshot.data!.docs.map((doc) {
+                                      final userData =
+                                          doc.data() as Map<String, dynamic>;
+                                      return PersonCard(
+                                        profileUid: widget.uid,
+                                        snap: userData,
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
+                            )
+                          ],
                         ),
                       )
-                    ],
-                  ),
-                ) : Container(),
+                    : Container(),
                 const Divider(),
                 FutureBuilder(
                   future: FirebaseFirestore.instance
@@ -339,31 +414,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     }
 
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      itemCount: snapshot.data!.docs.length,
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              crossAxisSpacing: 5,
-                              mainAxisSpacing: 5,
-                              childAspectRatio: 1),
-                      itemBuilder: (context, index) {
-                        DocumentSnapshot snap = snapshot.data!.docs[index];
+                    return snapshot.data!.docs.length > 0
+                        ? GridView.builder(
+                            shrinkWrap: true,
+                            itemCount: snapshot.data!.docs.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 5,
+                                    mainAxisSpacing: 5,
+                                    childAspectRatio: 1),
+                            itemBuilder: (context, index) {
+                              DocumentSnapshot snap =
+                                  snapshot.data!.docs[index];
 
-                        return InkWell(
-                          onTap: () {
-                            nextScreen(context, SinglePostScreen());
-                          },
-                          child: Container(
-                            child: Image(
-                              fit: BoxFit.cover,
-                              image: NetworkImage(snap['postUrl']),
+                              return InkWell(
+                                onTap: () {
+                                  nextScreen(context, const SinglePostScreen());
+                                },
+                                child: Container(
+                                  child: Image(
+                                    fit: BoxFit.cover,
+                                    image: NetworkImage(snap['postUrl']),
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 70),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                SizedBox(
+                                  height: 100,
+                                ),
+                                Text(
+                                  'Profile',
+                                  style: TextStyle(fontSize: 27),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Text(
+                                  "When you share photos and videos, both will appear on you're profile",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: Colors.grey, height: 1.7),
+                                )
+                              ],
                             ),
-                          ),
-                        );
-                      },
-                    );
+                          );
                   },
                 )
               ],
