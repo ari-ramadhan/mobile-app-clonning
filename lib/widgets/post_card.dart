@@ -25,14 +25,21 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool isLikeAnimating = false;
   int commentLen = 0;
+  QuerySnapshot<Map<String, dynamic>>? snapshotComment;
+  bool isLoading = false;
+
 
   @override
   void initState() {
     super.initState();
     getComments();
+    // fetchData();
   }
 
   void getComments() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       QuerySnapshot snap = await FirebaseFirestore.instance
           .collection('posts')
@@ -43,7 +50,16 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       showSnackBar(e.toString(), context);
     }
-    setState(() {});
+    setState(() {
+      isLoading = false;
+    });
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
   }
 
   @override
@@ -51,7 +67,8 @@ class _PostCardState extends State<PostCard> {
     final model.User user = Provider.of<UserProvider>(context).getUser;
     final width = MediaQuery.of(context).size.width;
 
-    return Container(
+    return
+    Container(
       decoration: BoxDecoration(
         border: Border.all(
             color:
@@ -59,7 +76,9 @@ class _PostCardState extends State<PostCard> {
         color: mobileBackgroundColor,
       ),
       padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
+      child:
+
+      Column(
         children: [
           //HEADER SECTION
           InkWell(
@@ -113,7 +132,6 @@ class _PostCardState extends State<PostCard> {
                                 snapshot.data!.data() as Map<String, dynamic>;
                             final isFollowing = currentUserData['following']
                                 .contains(widget.snap['uid']);
-
                             return ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                   side: isFollowing
@@ -143,30 +161,102 @@ class _PostCardState extends State<PostCard> {
                         showDialog(
                             context: context,
                             builder: (context) => Dialog(
-                                  child: ListView(
-                                      shrinkWrap: true,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16),
-                                      children: [
-                                        'Delete',
-                                      ]
-                                          .map((e) => InkWell(
-                                                onTap: () async {
-                                                  FirestoreMethods().deletePost(
-                                                      widget.snap['postId']);
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                    vertical: 12,
-                                                    horizontal: 16,
+                                child: FirebaseAuth.instance.currentUser!.uid ==
+                                        widget.snap['uid']
+                                    ? ListView(
+                                        shrinkWrap: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                        children: [
+                                          'Delete',
+                                        ]
+                                            .map((e) => InkWell(
+                                                  onTap: () async {
+                                                    Navigator.of(context).pop();
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return AlertDialog(
+                                                          content: const Text(
+                                                              "Are you sure want to delete this post?"),
+                                                          title: const Text(
+                                                              "Confirmation"),
+                                                          actions: [
+                                                            ElevatedButton(
+                                                                style: ElevatedButton.styleFrom(
+                                                                    elevation:
+                                                                        0,
+                                                                    backgroundColor:
+                                                                        Colors.grey[
+                                                                            800]),
+                                                                onPressed: () {
+                                                                  FirestoreMethods()
+                                                                      .deletePost(
+                                                                          widget
+                                                                              .snap['postId']);
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                                child:
+                                                                    const Text(
+                                                                  'Yes',
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .blue),
+                                                                )),
+                                                            ElevatedButton(
+                                                                style: ElevatedButton.styleFrom(
+                                                                    elevation:
+                                                                        0,
+                                                                    backgroundColor:
+                                                                        Colors.grey[
+                                                                            800]),
+                                                                onPressed: () {
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop();
+                                                                },
+                                                                child:
+                                                                    const Text(
+                                                                  'Cancel',
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .red),
+                                                                )),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                      vertical: 12,
+                                                      horizontal: 16,
+                                                    ),
+                                                    child: Text(e),
                                                   ),
-                                                  child: Text(e),
-                                                ),
-                                              ))
-                                          .toList()),
-                                ));
+                                                ))
+                                            .toList())
+                                    : ListView(
+                                        shrinkWrap: true,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16),
+                                        children: [
+                                          InkWell(
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 12,
+                                                horizontal: 16,
+                                              ),
+                                              child: const Text('Nothing'),
+                                            ),
+                                          )
+                                        ],
+                                      )));
                       },
                       icon: const Icon(Icons.more_vert))
                 ],
@@ -281,22 +371,25 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                 ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(top: 8),
-                  child: RichText(
-                      text: TextSpan(
-                          style: const TextStyle(color: primaryColor),
-                          children: [
-                        TextSpan(
-                            text: widget.snap['username'],
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        TextSpan(
-                          text: ' ${widget.snap['description']}',
-                        )
-                      ])),
-                ),
+
+                widget.snap['description'].toString().isNotEmpty
+                    ? Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.only(top: 8),
+                        child: RichText(
+                            text: TextSpan(
+                                style: const TextStyle(color: primaryColor),
+                                children: [
+                              TextSpan(
+                                  text: widget.snap['username'],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold)),
+                              TextSpan(
+                                text: ' ${widget.snap['description']}',
+                              )
+                            ])),
+                      )
+                    : Container(),
                 InkWell(
                   onTap: () {
                     nextScreen(context, CommentsScreen(snap: widget.snap));
@@ -315,92 +408,90 @@ class _PostCardState extends State<PostCard> {
                 const SizedBox(
                   height: 1,
                 ),
+                // commentLen > 0
+                //     ? Column(
+                //         children: [
+                //           const SizedBox(
+                //             height: 4,
+                //           ),
+                //           StreamBuilder(
+                //             stream: FirebaseFirestore.instance
+                //                 .collection('posts')
+                //                 .doc(widget.snap['postId'])
+                //                 .collection('comments')
+                //                 .orderBy('datePublished', descending: true)
+                //                 .limit(1)
+                //                 .snapshots(),
+                //             builder: (context, snapshot) {
+                //               var snapshit = snapshot.data!.docs[0].data();
 
-                // LATEST COMMENT SECTION
-                commentLen > 0
-                    ? Column(
-                        children: [
-                          const SizedBox(
-                            height: 4,
-                          ),
-                          StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection('posts')
-                                .doc(widget.snap['postId'])
-                                .collection('comments')
-                                .orderBy('datePublished', descending: true)
-                                .limit(1)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              var snapshit = snapshot.data!.docs[0].data();
+                //               if (snapshot.connectionState ==
+                //                   ConnectionState.waiting) {
+                //                 return const Center(child: CircularProgressIndicator());
+                //               }
+                //               if (snapshot.hasError) {
+                //                 return Text(snapshot.error.toString());
+                //               }
 
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircularProgressIndicator();
-                              }
-                              if (snapshot.hasError) {
-                                return Text(snapshot.error.toString());
-                              }
-
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            children: [
-                                              TextSpan(
-                                                  text: snapshit['name'],
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold)),
-                                              TextSpan(
-                                                text: ' ${snapshit['text']}',
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    height: 20,
-                                    child: IconButton(
-                                        onPressed: () {},
-                                        icon: const Icon(
-                                          Icons.favorite,
-                                          size: 13,
-                                        )),
-                                  )
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(
-                            height: 4,
-                          ),
-                        ],
-                      )
-                    : Container(),
+                //               return Row(
+                //                 crossAxisAlignment: CrossAxisAlignment.start,
+                //                 children: [
+                //                   Expanded(
+                //                     child: Column(
+                //                       crossAxisAlignment:
+                //                           CrossAxisAlignment.start,
+                //                       mainAxisAlignment:
+                //                           MainAxisAlignment.center,
+                //                       children: [
+                //                         RichText(
+                //                           text: TextSpan(
+                //                             children: [
+                //                               TextSpan(
+                //                                   text: snapshit['name'],
+                //                                   style: const TextStyle(
+                //                                       fontWeight:
+                //                                           FontWeight.bold)),
+                //                               TextSpan(
+                //                                 text: ' ${snapshit['text']}',
+                //                               ),
+                //                             ],
+                //                           ),
+                //                         ),
+                //                       ],
+                //                     ),
+                //                   ),
+                //                   SizedBox(
+                //                     height: 20,
+                //                     child: IconButton(
+                //                         onPressed: () {},
+                //                         icon: const Icon(
+                //                           Icons.favorite,
+                //                           size: 13,
+                //                         )),
+                //                   )
+                //                 ],
+                //               );
+                //             },
+                //           ),
+                //           const SizedBox(
+                //             height: 4,
+                //           ),
+                //         ],
+                //       )
+                //     : Container(),
                 Container(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     DateFormat.yMMMd()
                         .format(widget.snap['datePublished'].toDate()),
-                    style: const TextStyle(fontSize: 16, color: secondaryColor),
+                    style: const TextStyle(fontSize: 14, color: secondaryColor),
                   ),
                 ),
               ],
             ),
           )
         ],
-      ),
+      )
     );
   }
 }

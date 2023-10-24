@@ -14,6 +14,8 @@ class FindPeoplePage extends StatefulWidget {
 }
 
 class _FindPeoplePageState extends State<FindPeoplePage> {
+  bool _isLoading = false;
+
   Future<bool> checkFollowing(String uid) async {
     try {
       DocumentSnapshot snap = await FirebaseFirestore.instance
@@ -42,79 +44,97 @@ class _FindPeoplePageState extends State<FindPeoplePage> {
         backgroundColor: mobileBackgroundColor,
         title: Text('Find Peoples'),
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('users').snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          final userData = snapshot.data!.docs;
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              return userData[index]['uid'] != widget.uid
-                  ? ListTile(
-                      title: Text(userData[index]['username']),
-                      trailing: StreamBuilder<DocumentSnapshot>(
-                        stream: FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(FirebaseAuth.instance.currentUser!.uid)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
+      body:
+      // _isLoading
+      //     ? const Center(
+      //         child: CircularProgressIndicator(),
+      //       ) :
+            StreamBuilder(
+              stream:
+                  FirebaseFirestore.instance.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                final userData = snapshot.data!.docs;
+                return ListView.builder(
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    return userData[index]['uid'] != widget.uid
+                        ? ListTile(
+                            title: Text(userData[index]['username']),
+                            trailing: StreamBuilder<DocumentSnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(FirebaseAuth.instance.currentUser!.uid)
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                // setState(() {
+                                //   _isLoading = true;
+                                // });
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const Center(
+                                      child: CircularProgressIndicator());
+                                }
 
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          }
+                                if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                }
 
-                          if (!snapshot.hasData || !snapshot.data!.exists) {
-                            return const Text('Current user does not exist.');
-                          }
+                                if (!snapshot.hasData ||
+                                    !snapshot.data!.exists) {
+                                  return const Text(
+                                      'Current user does not exist.');
+                                }
 
-                          final currentUserData =
-                              snapshot.data!.data() as Map<String, dynamic>;
-                          final isFollowing = currentUserData['following']
-                              .contains(userData[index]['uid']);
+                                final currentUserData = snapshot.data!.data()
+                                    as Map<String, dynamic>;
+                                final isFollowing = currentUserData['following']
+                                    .contains(userData[index]['uid']);
 
-                          return ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                side: isFollowing
-                                    ? const BorderSide(
-                                        width: 0.3, color: Colors.white)
-                                    : null,
-                                backgroundColor:
-                                    isFollowing ? Colors.black : Colors.blue),
-                            onPressed: () async {
-                              if (isFollowing) {
-                                await FirestoreMethods().followUser(
-                                    FirebaseAuth.instance.currentUser!.uid,
-                                    userData[index]['uid']);
-                              } else {
-                                await FirestoreMethods().followUser(
-                                    FirebaseAuth.instance.currentUser!.uid,
-                                    userData[index]['uid']);
-                              }
-                            },
-                            child: Text(isFollowing ? 'Followed' : 'Follow'),
-                          );
-                        },
-                      ),
-                      leading: CircleAvatar(
-                        backgroundImage:
-                            NetworkImage(userData[index]['photoUrl']),
-                      ),
-                    )
-                  : Container();
-            },
-          );
-        },
-      ),
+                                // setState(() {
+                                //   _isLoading = false;
+                                // });
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      side: isFollowing
+                                          ? const BorderSide(
+                                              width: 0.3, color: Colors.white)
+                                          : null,
+                                      backgroundColor: isFollowing
+                                          ? Colors.black
+                                          : Colors.blue),
+                                  onPressed: () async {
+                                    if (isFollowing) {
+                                      await FirestoreMethods().followUser(
+                                          FirebaseAuth
+                                              .instance.currentUser!.uid,
+                                          userData[index]['uid']);
+                                    } else {
+                                      await FirestoreMethods().followUser(
+                                          FirebaseAuth
+                                              .instance.currentUser!.uid,
+                                          userData[index]['uid']);
+                                    }
+                                  },
+                                  child:
+                                      Text(isFollowing ? 'Followed' : 'Follow'),
+                                );
+                              },
+                            ),
+                            leading: CircleAvatar(
+                              backgroundImage:
+                                  NetworkImage(userData[index]['photoUrl']),
+                            ),
+                          )
+                        : Container();
+                  },
+                );
+              },
+            ),
     );
   }
 }

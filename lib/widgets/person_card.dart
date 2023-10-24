@@ -11,7 +11,8 @@ class PersonCard extends StatefulWidget {
   final profileUid;
   const PersonCard({
     Key? key,
-    required this.snap, required this.profileUid,
+    required this.snap,
+    required this.profileUid,
   }) : super(key: key);
 
   @override
@@ -21,13 +22,14 @@ class PersonCard extends StatefulWidget {
 class _PersonCardState extends State<PersonCard> {
   @override
   Widget build(BuildContext context) {
-    return widget.snap['uid'] != FirebaseAuth.instance.currentUser!.uid && widget.snap['uid'] != widget.profileUid
+    return widget.snap['uid'] != FirebaseAuth.instance.currentUser!.uid &&
+            widget.snap['uid'] != widget.profileUid
         ? InkWell(
-          onTap: () {
-            nextScreen(context, ProfileScreen(uid: widget.snap['uid']));
-          },
-          child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 3),
+            onTap: () {
+              nextScreen(context, ProfileScreen(uid: widget.snap['uid']));
+            },
+            child: Container(
+              margin: const EdgeInsets.only(right: 6),
               height: MediaQuery.of(context).size.height * 25 / 100,
               width: MediaQuery.of(context).size.width * 35 / 100,
               decoration: BoxDecoration(
@@ -87,8 +89,9 @@ class _PersonCardState extends State<PersonCard> {
                                         ? const BorderSide(
                                             width: 0.3, color: Colors.white)
                                         : null,
-                                    backgroundColor:
-                                        isFollowing ? Colors.black : Colors.blue),
+                                    backgroundColor: isFollowing
+                                        ? Colors.black
+                                        : Colors.blue),
                                 onPressed: () async {
                                   if (isFollowing) {
                                     await FirestoreMethods().followUser(
@@ -100,7 +103,8 @@ class _PersonCardState extends State<PersonCard> {
                                         widget.snap['uid']);
                                   }
                                 },
-                                child: Text(isFollowing ? 'Followed' : 'Follow'),
+                                child:
+                                    Text(isFollowing ? 'Followed' : 'Follow'),
                               ),
                             );
                           },
@@ -111,7 +115,7 @@ class _PersonCardState extends State<PersonCard> {
                 ],
               ),
             ),
-        )
+          )
         : Container();
   }
 }

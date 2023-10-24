@@ -1,7 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:instagram_flutter/models/user.dart';
+import 'package:instagram_flutter/models/user.dart' as model;
 import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/utils/colors.dart';
@@ -18,8 +20,14 @@ class AddPostScreen extends StatefulWidget {
 class _AddPostScreenState extends State<AddPostScreen> {
   Uint8List? _file;
   bool _isLoading = false;
-
+  String photoUrl = '';
   final TextEditingController _descriptionController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    getDataFromFirestore();
+  }
 
   void postImage(String uid, String username, String profImage) async {
     setState(() {
@@ -42,6 +50,34 @@ class _AddPostScreenState extends State<AddPostScreen> {
       }
     } catch (err) {
       showSnackBar(err.toString(), context);
+    }
+  }
+
+  Future<void> getDataFromFirestore() async {
+    try {
+      DocumentSnapshot documentSnapshot = await FirebaseFirestore.instance
+          .collection('users') // Ganti dengan nama koleksi Firestore Anda
+          .doc(FirebaseAuth
+              .instance.currentUser!.uid) // Ganti dengan ID dokumen Anda
+          .get();
+
+      if (documentSnapshot.exists) {
+        Map<String, dynamic> data =
+            documentSnapshot.data() as Map<String, dynamic>;
+
+        // Mengambil data dari suatu field
+        String fieldValue =
+            data['photoUrl']; // Ganti dengan nama field yang Anda inginkan
+
+        setState(() {
+          photoUrl = fieldValue;
+        });
+        print('Nilai field: $fieldValue');
+      } else {
+        print('Dokumen tidak ditemukan');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan: $e');
     }
   }
 
@@ -101,7 +137,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final User user = Provider.of<UserProvider>(context).getUser;
+    final model.User user = Provider.of<UserProvider>(context).getUser;
 
     return _file == null
         ? Center(
@@ -111,11 +147,11 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                      Icon(Icons.upload),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text('Make a post!')
+                  Icon(Icons.upload),
+                  SizedBox(
+                    height: 10,
+                  ),
+                  Text('Make a post!')
                 ],
               ),
             ),
@@ -124,14 +160,13 @@ class _AddPostScreenState extends State<AddPostScreen> {
             appBar: AppBar(
               backgroundColor: mobileBackgroundColor,
               leading: IconButton(
-                  onPressed: clearImage,
-                  icon: const Icon(Icons.arrow_back)),
+                  onPressed: clearImage, icon: const Icon(Icons.arrow_back)),
               centerTitle: false,
               title: const Text('Post to'),
               actions: [
                 TextButton(
                   onPressed: () =>
-                      postImage(user.uid, user.username, user.photoUrl),
+                      postImage(user.uid, user.username, photoUrl),
                   child: const Text(
                     'Post',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
