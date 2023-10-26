@@ -43,7 +43,8 @@ class FirestoreMethods {
       final userRef = FirebaseFirestore.instance.collection('users').doc(uid);
 
       if (newUsername.isNotEmpty && newBio.isNotEmpty && newEmail.isNotEmpty) {
-        await userRef.update({'username': newUsername, 'bio': newBio, 'email': newEmail});
+        await userRef.update(
+            {'username': newUsername, 'bio': newBio, 'email': newEmail});
         await FirebaseAuth.instance.currentUser!.updateEmail(newEmail);
       } else {
         print(res);
@@ -159,4 +160,29 @@ class FirestoreMethods {
 
     return res;
   }
+
+  Future<void> savePost(String userId, String postId) async {
+  try {
+    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
+    // Ambil data pengguna
+    final userSnapshot = await userRef.get();
+
+    if (userSnapshot.exists) {
+      final savedPosts = userSnapshot.data()?['savedPosts'] as List<String> ?? [];
+
+      // Periksa apakah postingan sudah ada dalam daftar tersimpan
+      if (!savedPosts.contains(postId)) {
+        // Tambahkan ID postingan ke daftar tersimpan
+        savedPosts.add(postId);
+
+        // Update data pengguna dengan daftar tersimpan yang baru
+        await userRef.update({'savedPosts': savedPosts});
+      }
+    }
+  } catch (e) {
+    print('Error saving post: $e');
+  }
+}
+
 }

@@ -7,6 +7,7 @@ import 'package:instagram_flutter/screens/edit_profile_page.dart';
 import 'package:instagram_flutter/screens/find_people_page.dart';
 import 'package:instagram_flutter/screens/following_list_screen.dart';
 import 'package:instagram_flutter/screens/login_screen.dart';
+import 'package:instagram_flutter/screens/saved_post_screen.dart';
 import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/utils.dart';
@@ -110,53 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     title: const Text('Saved'),
                                     onTap: () {
                                       Navigator.of(context).pop();
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            content: const Text(
-                                                "Are you sure want to sign out?"),
-                                            title: const Text("Confirmation"),
-                                            actions: [
-                                              ElevatedButton(
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                          elevation: 0,
-                                                          backgroundColor:
-                                                              Colors.grey[800]),
-                                                  onPressed: () {
-                                                    AuthMethods().signOut();
-                                                    nextScreenReplacement(
-                                                        context,
-                                                        const LoginScreen());
-                                                  },
-                                                  child: const Text(
-                                                    'Yes',
-                                                    style: TextStyle(
-                                                        color: Colors.blue),
-                                                  )),
-                                              ElevatedButton(
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                          elevation: 0,
-                                                          backgroundColor:
-                                                              Colors.grey[800]),
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                  child: const Text(
-                                                    'Cancel',
-                                                    style: TextStyle(
-                                                        color: Colors.red),
-                                                  )),
-                                            ],
-                                          );
-                                        },
-                                      ); //
-                                      // FirestoreMethods()
-                                      //     .deletePost(widget
-                                      //         .snap['postId']);
-                                      // Navigator.of(context).pop();
+                                      nextScreen(context, SavedPostScreen(uid: widget.uid));
                                     },
                                   ),
                                   ListTile(
@@ -474,7 +429,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 10,
                             ),
                             SingleChildScrollView(
-                              padding: const EdgeInsets.all(1),
+                              padding: const EdgeInsets.all(1.6),
                               scrollDirection: Axis.horizontal,
                               child: StreamBuilder<QuerySnapshot>(
                                 stream: FirebaseFirestore.instance
