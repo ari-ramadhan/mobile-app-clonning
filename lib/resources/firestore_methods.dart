@@ -70,6 +70,33 @@ class FirestoreMethods {
     }
   }
 
+  Future<void> likeComment(
+      String postId, String commentId, String uid, List likes) async {
+    try {
+      if (likes.contains(uid)) {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'likes': FieldValue.arrayRemove([uid])
+        });
+      } else {
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .update({
+          'likes': FieldValue.arrayUnion([uid])
+        });
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
   Future<void> postComment(String postId, String text, String uid, String name,
       String profilePic) async {
     try {
@@ -86,6 +113,7 @@ class FirestoreMethods {
           'uid': uid,
           'text': text,
           'commentId': commentId,
+          'likes': [],
           'datePublished': DateTime.now()
         });
       } else {
@@ -162,27 +190,55 @@ class FirestoreMethods {
   }
 
   Future<void> savePost(String userId, String postId) async {
-  try {
-    final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+    try {
+      final userRef =
+          FirebaseFirestore.instance.collection('users').doc(userId);
 
-    // Ambil data pengguna
-    final userSnapshot = await userRef.get();
+      // Ambil data pengguna
+      final userSnapshot = await userRef.get();
 
-    if (userSnapshot.exists) {
-      final savedPosts = userSnapshot.data()?['savedPosts'] as List<String> ?? [];
+      if (userSnapshot.exists) {
+        final savedPosts =
+            userSnapshot.data()?['savedPosts'] as List<String> ?? [];
 
-      // Periksa apakah postingan sudah ada dalam daftar tersimpan
-      if (!savedPosts.contains(postId)) {
-        // Tambahkan ID postingan ke daftar tersimpan
-        savedPosts.add(postId);
+        // Periksa apakah postingan sudah ada dalam daftar tersimpan
+        if (!savedPosts.contains(postId)) {
+          // Tambahkan ID postingan ke daftar tersimpan
+          savedPosts.add(postId);
 
-        // Update data pengguna dengan daftar tersimpan yang baru
-        await userRef.update({'savedPosts': savedPosts});
+          // Update data pengguna dengan daftar tersimpan yang baru
+          await userRef.update({'savedPosts': savedPosts});
+        }
       }
+    } catch (e) {
+      print('Error saving post: $e');
     }
-  } catch (e) {
-    print('Error saving post: $e');
   }
-}
 
+  Future<void> replyComments(String userId, String postId, String commentId,
+      String text, String profilePic, String name) async {
+    try {
+      if (text.isNotEmpty) {
+        String replyId = Uuid().v1();
+        await _firestore
+            .collection('posts')
+            .doc(postId)
+            .collection('comments')
+            .doc(commentId)
+            .collection('reply')
+            .doc(replyId)
+            .set({
+          'profilePic': profilePic,
+          'name': name,
+          'uid': userId,
+          'text': text,
+          'likes': [],
+          'replyId': replyId,
+          'datePublished': DateTime.now(),
+        });
+      } else {}
+    } catch (e) {
+      print(e);
+    }
+  }
 }

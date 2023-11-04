@@ -8,7 +8,14 @@ import 'package:instagram_flutter/utils/utils.dart';
 
 class LikeScreen extends StatefulWidget {
   final snap;
-  const LikeScreen({Key? key, required this.snap}) : super(key: key);
+  final bool isCommentLike;
+  final String commentId;
+  const LikeScreen(
+      {Key? key,
+      required this.snap,
+      required this.isCommentLike,
+      this.commentId = ''})
+      : super(key: key);
 
   @override
   _LikeScreenState createState() => _LikeScreenState();
@@ -45,10 +52,17 @@ class _LikeScreenState extends State<LikeScreen> {
         centerTitle: false,
       ),
       body: StreamBuilder(
-        stream: FirebaseFirestore.instance
-            .collection('posts')
-            .doc(widget.snap['postId'])
-            .snapshots(),
+        stream: widget.isCommentLike
+            ? FirebaseFirestore.instance
+                .collection('posts')
+                .doc(widget.snap)
+                .collection('comments')
+                .doc(widget.commentId)
+                .snapshots()
+            : FirebaseFirestore.instance
+                .collection('posts')
+                .doc(widget.snap['postId'])
+                .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -62,15 +76,14 @@ class _LikeScreenState extends State<LikeScreen> {
             );
           }
 
-
           final userLiked = snapshot.data!['likes'] as dynamic;
 
           return ListView.builder(
             itemCount: userLiked.length,
             itemBuilder: (context, index) {
               print('jumlah like : ${userLiked.length}');
-              return snapshot.hasData ?
-                  FutureBuilder<DocumentSnapshot>(
+              return snapshot.hasData
+                  ? FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance
                           .collection('users')
                           .doc(userLiked[index])

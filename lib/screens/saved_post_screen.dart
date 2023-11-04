@@ -114,7 +114,12 @@ class _SavedPostScreenState extends State<SavedPostScreen> {
               // Sekarang Anda memiliki daftar ID postingan yang tersimpan dalam savedPosts
               // Lanjutkan ke langkah berikutnya untuk mengambil data postingan
             } else {
-              return const Text('User data not found.');
+              return const Center(
+                  child: Text(
+                "No saved posts found.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, height: 1.7),
+              ));
             }
           },
         ));

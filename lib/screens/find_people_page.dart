@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_flutter/providers/user_provider.dart';
 import 'package:instagram_flutter/utils/colors.dart';
-
+import 'package:instagram_flutter/models/user.dart' as model;
+import 'package:provider/provider.dart';
 import '../resources/firestore_methods.dart';
 
 class FindPeoplePage extends StatefulWidget {
@@ -39,6 +41,8 @@ class _FindPeoplePageState extends State<FindPeoplePage> {
 
   @override
   Widget build(BuildContext context) {
+    final model.User user = Provider.of<UserProvider>(context).getUser;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mobileBackgroundColor,
@@ -62,7 +66,7 @@ class _FindPeoplePageState extends State<FindPeoplePage> {
                 return ListView.builder(
                   itemCount: snapshot.data!.docs.length,
                   itemBuilder: (context, index) {
-                    return userData[index]['uid'] != widget.uid
+                    return userData[index]['uid'] != widget.uid && userData[index]['uid'] != user.uid
                         ? ListTile(
                             title: Text(userData[index]['username']),
                             trailing: StreamBuilder<DocumentSnapshot>(

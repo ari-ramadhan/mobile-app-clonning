@@ -465,6 +465,7 @@ class _PostCardState extends State<PostCard> {
                             context,
                             LikeScreen(
                               snap: widget.snap,
+                              isCommentLike: false,
                             ));
                       },
                       child: Text(
@@ -505,7 +506,7 @@ class _PostCardState extends State<PostCard> {
                             ? 'View all $commentLen comments'
                             : 'No comment recently',
                         style: const TextStyle(
-                            fontSize: 16, color: secondaryColor),
+                            color: secondaryColor),
                       ),
                     ),
                   ),
