@@ -241,4 +241,186 @@ class FirestoreMethods {
       print(e);
     }
   }
+
+  // Future<void> sendChats(
+  //     String senderId, String receiverId, String text) async {
+  //   try {
+  //     if (text.isNotEmpty) {
+  //       // Cari ID chat yang sesuai berdasarkan partisipan
+  //       QuerySnapshot chatQuery = await _firestore.collection('chats').get();
+
+  //       String chatId;
+
+  //       if (chatQuery.docs.isNotEmpty) {
+  //         // Jika dokumen chat sudah ada, gunakan ID yang ada
+  //         chatId = chatQuery.docs[0].id;
+  //       } else {
+  //         // Jika dokumen chat belum ada, buat ID baru
+  //         chatId = Uuid().v1();
+
+  //         // Buat dokumen chat baru dengan partisipan
+  //         await _firestore.collection('chats').doc(chatId).set({
+  //           'participants': [senderId, receiverId],
+  //         });
+  //       }
+
+  //       // Tambahkan pesan ke koleksi pesan dalam dokumen chat yang sesuai
+  //       String messageId = Uuid().v1();
+  //       await _firestore
+  //           .collection('chats')
+  //           .doc(chatId)
+  //           .collection('messages')
+  //           .doc(messageId)
+  //           .set({
+  //         'message': text,
+  //         'sender': senderId, // Simpan ID pengirim pesan
+  //         'time': DateTime.now(),
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error sending chat: $e');
+  //   }
+  // }
+
+  getChats(String senderId, String receiverId) async {
+    QuerySnapshot query = await FirebaseFirestore.instance
+        .collection('chats')
+        .where("participants", arrayContains: [senderId, receiverId]).get();
+
+    String chatsId = query.docs[0].id;
+    if (kDebugMode) {
+      print('chatid = $chatsId');
+    }
+
+    return FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatsId)
+        .collection('messages')
+        .orderBy('time')
+        .snapshots();
+  }
+
+  Future<void> sendChats(
+    String senderId,
+    String receiverId,
+    String text,
+  ) async {
+    try {
+      if (text.isNotEmpty) {
+        // Cari dokumen chat yang sesuai dengan senderId dan receiverId
+        QuerySnapshot chatQuery = await _firestore.collection('chats').get();
+
+        QueryDocumentSnapshot<Object?>? matchingChat;
+
+        for (var chatDoc in chatQuery.docs) {
+          final data = chatDoc.data() as Map<String, dynamic>;
+          final participants = data['participants'] as List<dynamic>;
+
+          // Periksa apakah chatDoc sesuai dengan senderId dan receiverId
+          if (participants.contains(senderId) &&
+              participants.contains(receiverId)) {
+            matchingChat = chatDoc;
+            break;
+          }
+        }
+
+        if (matchingChat != null) {
+          // Jika dokumen chat sudah ada, gunakan dokumen yang sesuai
+          // untuk menambahkan pesan
+          String messageId = Uuid().v1();
+          await _firestore
+              .collection('chats')
+              .doc(matchingChat.id)
+              .collection('messages')
+              .doc(messageId)
+              .set({
+            'message': text,
+            'sender': senderId, // Simpan ID pengirim pesan
+            'time': DateTime.now(),
+          });
+        } else {
+          // Jika dokumen chat belum ada, buat ID baru dan dokumen chat baru
+          String chatId = Uuid().v1();
+
+          await _firestore.collection('chats').doc(chatId).set({
+            'participants': [senderId, receiverId],
+          });
+
+          String messageId = Uuid().v1();
+          await _firestore
+              .collection('chats')
+              .doc(chatId)
+              .collection('messages')
+              .doc(messageId)
+              .set({
+            'message': text,
+            'sender': senderId, // Simpan ID pengirim pesan
+            'time': DateTime.now(),
+          });
+        }
+      }
+    } catch (e) {
+      print('Error sending chat: $e');
+    }
+  }
+
+  // Future<void> sendChats(
+  //     String senderId, String receiverId, String text) async {
+  //   try {
+  //     if (text.isNotEmpty) {
+  //       // Cari ID chat yang sesuai berdasarkan partisipan
+  //       QuerySnapshot chatQuery = await _firestore.collection('chats').where(
+  //           'participants',
+  //           arrayContainsAny: [senderId, receiverId]).get();
+
+  //       String chatId;
+
+  //       if (chatQuery.docs.isNotEmpty) {
+  //         // Jika dokumen chat sudah ada, gunakan ID yang ada
+  //         chatId = chatQuery.docs[0].id;
+  //       } else {
+  //         // Jika dokumen chat belum ada, buat ID baru
+  //         chatId = Uuid().v1();
+
+  //         // Buat dokumen chat baru dengan partisipan
+  //         await _firestore.collection('chats').doc(chatId).set({
+  //           'participants': [senderId, receiverId],
+  //         });
+  //       }
+
+  //       // Tambahkan pesan ke koleksi pesan dalam dokumen chat yang sesuai
+  //       String messageId = Uuid().v1();
+  //       await _firestore
+  //           .collection('chats')
+  //           .doc(chatId)
+  //           .collection('messages')
+  //           .doc(messageId)
+  //           .set({
+  //         'message': text,
+  //         'sender': senderId, // Simpan ID pengirim pesan
+  //         'time': DateTime.now(),
+  //       });
+  //     }
+  //   } catch (e) {
+  //     print('Error sending chat: $e');
+  //   }
+  // }
+
+  // getChats(String senderId, String receiverId) async {
+  //   QuerySnapshot query = await FirebaseFirestore.instance
+  //       .collection('chats')
+  //       .where("participants", arrayContains: [senderId, receiverId]).get();
+
+  //   String chatsId = query.docs[0].id;
+  //   if (kDebugMode) {
+  //     print('chatid = $chatsId');
+  //   }
+
+  //   return FirebaseFirestore.instance
+  //       .collection('chats')
+  //       .doc(chatsId)
+  //       .collection('messages')
+  //       .orderBy('time')
+  //       .snapshots();
+  // }
 }

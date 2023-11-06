@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:instagram_flutter/screens/chats_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/global_variable.dart';
+import 'package:instagram_flutter/utils/utils.dart';
 import 'package:instagram_flutter/widgets/post_card.dart';
 
 class FeedScreen extends StatelessWidget {
@@ -19,7 +21,9 @@ class FeedScreen extends StatelessWidget {
           : AppBar(
               actions: [
                 IconButton(
-                    onPressed: () {}, icon: Icon(Icons.messenger_outline))
+                    onPressed: () {
+                      nextScreen(context, const ChatsScreen());
+                    }, icon: Icon(Icons.messenger_outline))
               ],
               centerTitle: false,
               backgroundColor: width > webScreenSize
