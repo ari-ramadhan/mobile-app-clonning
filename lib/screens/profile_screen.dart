@@ -111,7 +111,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     title: const Text('Saved'),
                                     onTap: () {
                                       Navigator.of(context).pop();
-                                      nextScreen(context, SavedPostScreen(uid: widget.uid));
+                                      nextScreen(context,
+                                          SavedPostScreen(uid: widget.uid));
                                     },
                                   ),
                                   ListTile(
@@ -199,6 +200,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       .doc(widget.uid)
                                       .snapshots(),
                                   builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return CircularProgressIndicator(); // Loading spinner saat data dimuat.
+                                    }
+
+                                    if (snapshot.hasError) {
+                                      return Text('Error: ${snapshot.error}');
+                                    }
+
+                                    if (!snapshot.hasData) {
+                                      return Text(
+                                          'Tidak ada data.'); // Tampilkan pesan jika tidak ada data.
+                                    }
+
                                     var userData = snapshot.data!.data()
                                         as Map<String, dynamic>;
                                     var followersCount =

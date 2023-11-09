@@ -24,6 +24,19 @@ class _ChatsScreenState extends State<ChatsScreen> {
       body: StreamBuilder(
         stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return CircularProgressIndicator(); // Loading spinner saat data dimuat.
+          }
+
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Text(
+                'Tidak ada data.'); // Tampilkan pesan jika tidak ada data.
+          }
+
           final users = snapshot.data!.docs;
           return ListView.builder(
             itemCount: users.length,

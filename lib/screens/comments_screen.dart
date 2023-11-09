@@ -26,6 +26,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
   bool replyMode = false;
   bool isViewReplies = false;
 
+  Set<String> commentsToViewReplies = Set();
+
   String commentId = '';
   String commentUsername = '';
 
@@ -52,22 +54,22 @@ class _CommentsScreenState extends State<CommentsScreen> {
             .collection('comments')
             .orderBy('datePublished', descending: false)
             .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        builder: (context, commentSnapshot) {
+          if (commentSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(),
             );
           }
-          print('tes : ${snapshot.connectionState}');
-          print('datanya : ${snapshot.hasData}');
+          print('tes : ${commentSnapshot.connectionState}');
+          print('datanya : ${commentSnapshot.hasData}');
           return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
+            itemCount: commentSnapshot.data!.docs.length,
             itemBuilder: (context, index) {
               // return CommentCard(
-              //   snap: snapshot.data!.docs[index].data(),
+              //   snap: commentSnapshot.data!.docs[index].data(),
               //   postId: widget.snap['postId'],
               // );
-              final snap = snapshot.data!.docs[index].data();
+              final snap = commentSnapshot.data!.docs[index].data();
               return Container(
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
@@ -248,6 +250,20 @@ class _CommentsScreenState extends State<CommentsScreen> {
                         )
                       ],
                     ),
+                    // InkWell(
+                    //     onTap: () {
+                    //       setState(() {
+                    //         isViewReplies = !isViewReplies;
+                    //       });
+                    //     },
+                    //     child: Container(
+                    //       width: double.infinity,
+                    //       padding: const EdgeInsets.only(left: 52),
+                    //       child: Text(
+                    //         '---- View ${isViewReplies ? 'Less' : 'All'} ${commentSnapshot.data!.docs.length} replies',
+                    //         style: TextStyle(color: Colors.grey[400]),
+                    //       ),
+                    //     )),
                     StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('posts')
@@ -258,171 +274,153 @@ class _CommentsScreenState extends State<CommentsScreen> {
                           .orderBy("datePublished", descending: false)
                           .snapshots(),
                       builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator(); // Loading spinner saat data dimuat.
+                        }
+
+                        if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return  Container();
+                        }
+
                         if (snapshot.data!.docs.length > 0) {
                           final docs = snapshot.data!.docs;
 
-                          return isViewReplies
-                              ? Column(
-                                  children: [
-                                    for (int i = 0; i < docs.length; i++)
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8),
-                                        child: Row(
-                                          children: [
-                                            const SizedBox(
-                                              width: 50,
-                                            ),
-                                            CircleAvatar(
-                                              radius: 16,
-                                              backgroundImage: NetworkImage(
-                                                  docs[i].data()['profilePic']),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 20),
-                                              child: Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.center,
-                                                  children: [
-                                                    RichText(
-                                                      text: TextSpan(
-                                                        children: [
-                                                          TextSpan(
-                                                              text: docs[i]
-                                                                      .data()[
-                                                                  'name'],
-                                                              style: const TextStyle(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold)),
-                                                          TextSpan(
-                                                            text:
-                                                                ' ${docs[i].data()['text']}',
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Row(
-                                                      children: [
-                                                        Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(top: 4),
-                                                          child: Text(
-                                                              DateFormat.yMMMd()
-                                                                  .format(docs[
-                                                                          i]
-                                                                      .data()[
-                                                                          'datePublished']
-                                                                      .toDate()),
-                                                              style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w400,
-                                                                  color: Colors
-                                                                          .grey[
-                                                                      400])),
-                                                        ),
-                                                        const SizedBox(
-                                                          width: 12,
-                                                        ),
-                                                      ],
-                                                    )
-                                                  ],
-                                                ),
-                                              ),
-                                            )
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ) : InkWell(
+                          return
+                              // isViewReplies
+                              //     ?
+                              Column(
+                            children: [
+                              InkWell(
                                   onTap: () {
+                                    // Saat tombol "View Replies" ditekan
                                     setState(() {
-                                      isViewReplies = !isViewReplies;
+                                      if (commentsToViewReplies
+                                          .contains(snap['commentId'])) {
+                                        commentsToViewReplies
+                                            .remove(snap['commentId']);
+                                      } else {
+                                        commentsToViewReplies.add(snap['commentId']);
+                                      }
                                     });
                                   },
                                   child: Container(
                                     width: double.infinity,
-                                    padding: EdgeInsets.only(left: 52),
+                                    padding: const EdgeInsets.only(left: 52),
                                     child: Text(
-                                      '---- View all ${snapshot.data!.docs.length} replies',
+                                      '---- View ${commentsToViewReplies.contains(snap['commentId']) ? 'Less' : 'All'} ${snapshot.data!.docs.length} replies',
                                       style: TextStyle(color: Colors.grey[400]),
                                     ),
-                                  ));
-                          // return ListView(
-                          //     children: docs.map((doc) {
-                          //   final data = doc.data() as Map<String, dynamic>;
-                          //   return CircleAvatar(
-                          //     backgroundImage: NetworkImage(
-                          //         data['profilePic']),
-                          //   );
-                          // }).toList());
-
-                          // return InkWell(
-                          //   onTap: () {},
-                          //   child:
-                          //   // Container(
-                          //   //   width: double.infinity,
-                          //   //   padding: EdgeInsets.only(left: 52),
-                          //   //   child: Text(
-                          //   //     '---- View all ${snapshot.data!.docs.length} replies',
-                          //   //     style: TextStyle(color: Colors.grey[400]),
-                          //   //   ),
-                          //   // ),
-                          //   Column(
-                          //     children: [
-                          //       for ()
-                          //       CircleAvatar(
-                          //         backgroundImage: NetworkImage(snapshot.data!.docs[0].data()['profilePic']),
-                          //       ),
-                          //     ],
-                          //   )
-                          // );
-                          // var replyText = snapshot.data!.docs[0].data();
-                          // print('tesss : ${replyText['text']}');
-                          // return ListView.builder(
-                          //   itemBuilder: (context, index) {
-                          //     var replies = snapshot.data!.docs[index].data();
-                          //     print('tesss : ${replies['text']}');
-                          //     return Text(replies['text']);
-                          //   },
-                          // );
-
-                          return Column(
-                            children: [
-                              InkWell(
-                                onTap: () {},
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.only(left: 52),
-                                  child: Text(
-                                    '---- View all ${snapshot.data!.docs.length} replies',
-                                    style: TextStyle(color: Colors.grey[400]),
-                                  ),
-                                ),
-                              ),
-                              ListView.builder(
-                                itemBuilder: (context, index) {
-                                  var replies = snapshot.data!.docs[index];
-                                  return Row(
-                                    children: [
-                                      InkWell(
-                                          child: CircleAvatar(
-                                        backgroundImage:
-                                            NetworkImage(replies['profilePic']),
-                                      ))
-                                    ],
-                                  );
-                                },
-                              )
+                                  )),
+                              commentsToViewReplies.contains(snap['commentId'])
+                                  ? Column(
+                                      children: [
+                                        for (int i = 0; i < docs.length; i++)
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8),
+                                            child: Row(
+                                              children: [
+                                                const SizedBox(
+                                                  width: 50,
+                                                ),
+                                                CircleAvatar(
+                                                  radius: 16,
+                                                  backgroundImage: NetworkImage(
+                                                      docs[i].data()[
+                                                          'profilePic']),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 20),
+                                                  child: Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        RichText(
+                                                          text: TextSpan(
+                                                            children: [
+                                                              TextSpan(
+                                                                  text: docs[i]
+                                                                          .data()[
+                                                                      'name'],
+                                                                  style: const TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold)),
+                                                              TextSpan(
+                                                                text:
+                                                                    ' ${docs[i].data()['text']}',
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                          .only(
+                                                                      top: 4),
+                                                              child: Text(
+                                                                  DateFormat
+                                                                          .yMMMd()
+                                                                      .format(docs[
+                                                                              i]
+                                                                          .data()[
+                                                                              'datePublished']
+                                                                          .toDate()),
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w400,
+                                                                      color: Colors
+                                                                              .grey[
+                                                                          400])),
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 12,
+                                                            ),
+                                                          ],
+                                                        )
+                                                      ],
+                                                    ),
+                                                  ),
+                                                )
+                                              ],
+                                            ),
+                                          ),
+                                      ],
+                                    )
+                                  : Container()
                             ],
                           );
+                          // : InkWell(
+                          //     onTap: () {
+                          //       setState(() {
+                          //         isViewReplies = !isViewReplies;
+                          //       });
+                          //     },
+                          //     child: Container(
+                          //       width: double.infinity,
+                          //       padding: const EdgeInsets.only(left: 52),
+                          //       child: Text(
+                          //         '---- View ${isViewReplies ? 'Less' : 'All'} ${snapshot.data!.docs.length} replies',
+                          //         style: TextStyle(color: Colors.grey[400]),
+                          //       ),
+                          //     ));
                         } else {
                           return Container();
                         }
@@ -435,28 +433,6 @@ class _CommentsScreenState extends State<CommentsScreen> {
           );
         },
       ),
-
-      // replyMode
-      //     ? Container(
-      //       height: double.minPositive,
-      //         padding: const EdgeInsets.all(8),
-      //         child: Row(
-      //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //           children: [
-      //             Text('Replying $commentUsername'),
-      //             GestureDetector(
-      //                 onTap: () {
-      //                   setState(() {
-      //                     replyMode = false;
-      //                     commentId = '';
-      //                     commentUsername = '';
-      //                   });
-      //                 },
-      //                 child: Icon(Icons.close))
-      //           ],
-      //         ),
-      //       )
-      //     : Container(),
       bottomNavigationBar: replyMode
           ? Container(
               width: kToolbarHeight,
@@ -481,7 +457,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                                 commentUsername = '';
                               });
                             },
-                            child: Icon(Icons.close))
+                            child: const Icon(Icons.close))
                       ],
                     ),
                   ),
