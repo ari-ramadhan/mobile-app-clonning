@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter/material.dart';
 import 'package:instagram_flutter/resources/firestore_methods.dart';
 import 'package:instagram_flutter/screens/profile_screen.dart';
+import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
 import 'package:instagram_flutter/utils/global_variable.dart';
 import 'package:instagram_flutter/utils/utils.dart';
@@ -39,7 +40,7 @@ class _SearchScreenState extends State<SearchScreen> {
               });
             },
             controller: searchController,
-            decoration: InputDecoration(labelText: 'Search for an user'),
+            decoration: const InputDecoration(labelText: 'Search for an user'),
           ),
         ),
         body: isShowUsers
@@ -92,9 +93,19 @@ class _SearchScreenState extends State<SearchScreen> {
                               (index % 7 == 0) ? 2 : 1),
                       crossAxisCount: 3,
                       itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (context, index) => Image.network(
-                            snapshot.data!.docs[index]['postUrl'],
-                            fit: BoxFit.cover,
+                      itemBuilder: (context, index) => InkWell(
+                            onTap: () {
+                              nextScreen(
+                                  context,
+                                  SinglePostScreen(
+                                    appBarTitle: 'Discover',
+                                      postId: snapshot.data!.docs[index]
+                                          ['postId']));
+                            },
+                            child: Image.network(
+                              snapshot.data!.docs[index]['postUrl'],
+                              fit: BoxFit.cover,
+                            ),
                           ));
                 },
               ));
