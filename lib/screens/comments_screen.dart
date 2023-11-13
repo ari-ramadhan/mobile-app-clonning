@@ -250,20 +250,8 @@ class _CommentsScreenState extends State<CommentsScreen> {
                         )
                       ],
                     ),
-                    // InkWell(
-                    //     onTap: () {
-                    //       setState(() {
-                    //         isViewReplies = !isViewReplies;
-                    //       });
-                    //     },
-                    //     child: Container(
-                    //       width: double.infinity,
-                    //       padding: const EdgeInsets.only(left: 52),
-                    //       child: Text(
-                    //         '---- View ${isViewReplies ? 'Less' : 'All'} ${commentSnapshot.data!.docs.length} replies',
-                    //         style: TextStyle(color: Colors.grey[400]),
-                    //       ),
-                    //     )),
+
+                    //view replies Versi for loop
                     StreamBuilder(
                       stream: FirebaseFirestore.instance
                           .collection('posts')
@@ -295,7 +283,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                               //     ?
                               Column(
                             children: [
-                              InkWell(
+                              GestureDetector(
                                   onTap: () {
                                     // Saat tombol "View Replies" ditekan
                                     setState(() {
@@ -318,6 +306,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
                                   )),
                               commentsToViewReplies.contains(snap['commentId'])
                                   ? Column(
+                                    mainAxisSize: MainAxisSize.max,
                                       children: [
                                         for (int i = 0; i < docs.length; i++)
                                           Padding(
@@ -407,20 +396,6 @@ class _CommentsScreenState extends State<CommentsScreen> {
                                   : Container()
                             ],
                           );
-                          // : InkWell(
-                          //     onTap: () {
-                          //       setState(() {
-                          //         isViewReplies = !isViewReplies;
-                          //       });
-                          //     },
-                          //     child: Container(
-                          //       width: double.infinity,
-                          //       padding: const EdgeInsets.only(left: 52),
-                          //       child: Text(
-                          //         '---- View ${isViewReplies ? 'Less' : 'All'} ${snapshot.data!.docs.length} replies',
-                          //         style: TextStyle(color: Colors.grey[400]),
-                          //       ),
-                          //     ));
                         } else {
                           return Container();
                         }

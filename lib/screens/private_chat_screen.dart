@@ -79,7 +79,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
         stream: FirebaseFirestore.instance.collection('chats').snapshots(),
         builder: (context, chatSnapshot) {
           if (chatSnapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator(); // Menampilkan loading saat data sedang dimuat
+            return const Center(child: CircularProgressIndicator()); // Menampilkan loading saat data sedang dimuat
           }
 
           if (chatSnapshot.hasError) {
@@ -121,7 +121,7 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
                 builder: (context, messageSnapshot) {
                   if (messageSnapshot.connectionState ==
                       ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (messageSnapshot.hasError) {
@@ -266,7 +266,13 @@ class _PrivateChatScreenState extends State<PrivateChatScreen> {
                 padding: const EdgeInsets.only(left: 16, right: 8),
                 child: TextField(
                   controller: messageController,
-                  decoration: const InputDecoration(hintText: 'Send a message'),
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12),
+
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.grey, width: 0.2),
+                      borderRadius: BorderRadius.all(Radius.circular(30))),
+                    hintText: 'Send a message'),
                 ),
               ),
             ),

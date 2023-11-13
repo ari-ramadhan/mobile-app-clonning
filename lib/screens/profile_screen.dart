@@ -518,7 +518,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                               return InkWell(
                                 onTap: () {
-                                  nextScreen(context, const SinglePostScreen());
+                                  nextScreen(context, SinglePostScreen(postId: snap['postId'],));
                                 },
                                 child: Container(
                                   child: Image(

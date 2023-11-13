@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:instagram_flutter/screens/single_post_screen.dart';
 import 'package:instagram_flutter/utils/colors.dart';
+import 'package:instagram_flutter/utils/utils.dart';
 
 class SavedPostScreen extends StatefulWidget {
   final uid;
@@ -85,7 +87,9 @@ class _SavedPostScreenState extends State<SavedPostScreen> {
                               as Map<String, dynamic>;
 
                           return InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              nextScreen(context, SinglePostScreen(postId: post['postId'], appBarTitle: 'Saved',));
+                            },
                             child: Image(
                               fit: BoxFit.cover,
                               image: NetworkImage(post['postUrl']),

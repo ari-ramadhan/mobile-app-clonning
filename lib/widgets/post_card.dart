@@ -16,7 +16,10 @@ import 'package:provider/provider.dart';
 
 class PostCard extends StatefulWidget {
   final snap;
-  const PostCard({Key? key, required this.snap}) : super(key: key);
+  const PostCard({
+    Key? key,
+    required this.snap,
+  }) : super(key: key);
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -27,6 +30,10 @@ class _PostCardState extends State<PostCard> {
   int commentLen = 0;
   QuerySnapshot<Map<String, dynamic>>? snapshotComment;
   bool isLoading = false;
+
+  bool isEditMode = false;
+
+  TextEditingController captionEditController = TextEditingController();
 
   @override
   void initState() {
@@ -56,6 +63,7 @@ class _PostCardState extends State<PostCard> {
 
   @override
   void dispose() {
+    captionEditController.dispose();
     super.dispose();
   }
 
@@ -154,13 +162,15 @@ class _PostCardState extends State<PostCard> {
                             },
                           )
                         : Container(),
-                    IconButton(
-                        onPressed: () {
-                          showDialog(
-                              context: context,
-                              builder: (context) => Dialog(
-                                  child:
-                                      FirebaseAuth.instance.currentUser!.uid ==
+                    isEditMode
+                        ? Container()
+                        : IconButton(
+                            onPressed: () {
+                              showDialog(
+                                  context: context,
+                                  builder: (context) => Dialog(
+                                      child: FirebaseAuth
+                                                  .instance.currentUser!.uid ==
                                               widget.snap['uid']
                                           ? ListView(
                                               shrinkWrap: true,
@@ -168,77 +178,100 @@ class _PostCardState extends State<PostCard> {
                                                   const EdgeInsets.symmetric(
                                                       vertical: 16),
                                               children: [
-                                                'Delete',
-                                              ]
-                                                  .map((e) => InkWell(
-                                                        onTap: () async {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          showDialog(
-                                                            context: context,
-                                                            builder:
-                                                                (BuildContext
-                                                                    context) {
-                                                              return AlertDialog(
-                                                                content: const Text(
-                                                                    "Are you sure want to delete this post?"),
-                                                                title: const Text(
-                                                                    "Confirmation"),
-                                                                actions: [
-                                                                  ElevatedButton(
-                                                                      style: ElevatedButton.styleFrom(
-                                                                          elevation:
-                                                                              0,
-                                                                          backgroundColor: Colors.grey[
+                                                  InkWell(
+                                                    onTap: () async {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return AlertDialog(
+                                                            content: const Text(
+                                                                "Are you sure want to delete this post?"),
+                                                            title: const Text(
+                                                                "Confirmation"),
+                                                            actions: [
+                                                              ElevatedButton(
+                                                                  style: ElevatedButton.styleFrom(
+                                                                      elevation:
+                                                                          0,
+                                                                      backgroundColor:
+                                                                          Colors.grey[
                                                                               800]),
-                                                                      onPressed:
-                                                                          () {
-                                                                        FirestoreMethods()
-                                                                            .deletePost(widget.snap['postId']);
-                                                                        Navigator.of(context)
-                                                                            .pop();
-                                                                      },
-                                                                      child:
-                                                                          const Text(
-                                                                        'Yes',
-                                                                        style: TextStyle(
-                                                                            color:
-                                                                                Colors.blue),
-                                                                      )),
-                                                                  ElevatedButton(
-                                                                      style: ElevatedButton.styleFrom(
-                                                                          elevation:
-                                                                              0,
-                                                                          backgroundColor: Colors.grey[
+                                                                  onPressed:
+                                                                      () {
+                                                                    FirestoreMethods()
+                                                                        .deletePost(
+                                                                            widget.snap['postId']);
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  },
+                                                                  child:
+                                                                      const Text(
+                                                                    'Yes',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .blue),
+                                                                  )),
+                                                              ElevatedButton(
+                                                                  style: ElevatedButton.styleFrom(
+                                                                      elevation:
+                                                                          0,
+                                                                      backgroundColor:
+                                                                          Colors.grey[
                                                                               800]),
-                                                                      onPressed:
-                                                                          () {
-                                                                        Navigator.of(context)
-                                                                            .pop();
-                                                                      },
-                                                                      child:
-                                                                          const Text(
-                                                                        'Cancel',
-                                                                        style: TextStyle(
-                                                                            color:
-                                                                                Colors.red),
-                                                                      )),
-                                                                ],
-                                                              );
-                                                            },
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
+                                                                  },
+                                                                  child:
+                                                                      const Text(
+                                                                    'Cancel',
+                                                                    style: TextStyle(
+                                                                        color: Colors
+                                                                            .red),
+                                                                  )),
+                                                            ],
                                                           );
                                                         },
-                                                        child: Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .symmetric(
-                                                            vertical: 12,
-                                                            horizontal: 16,
-                                                          ),
-                                                          child: Text(e),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16,
+                                                      ),
+                                                      child: Text('Delete'),
+                                                    ),
+                                                  ),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        isEditMode = true;
+                                                        captionEditController
+                                                                .text =
+                                                            widget.snap[
+                                                                'description'];
+
+                                                      });
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          vertical: 12,
+                                                          horizontal: 16,
                                                         ),
-                                                      ))
-                                                  .toList())
+                                                        child: Text('Edit')),
+                                                  )
+                                                ])
                                           : ListView(
                                               shrinkWrap: true,
                                               padding:
@@ -258,8 +291,8 @@ class _PostCardState extends State<PostCard> {
                                                 )
                                               ],
                                             )));
-                        },
-                        icon: const Icon(Icons.more_vert))
+                            },
+                            icon: const Icon(Icons.more_vert))
                   ],
                 ),
               ),
@@ -268,11 +301,13 @@ class _PostCardState extends State<PostCard> {
             //IMAGE SECTION
             GestureDetector(
               onDoubleTap: () async {
-                await FirestoreMethods().likePost(
-                    widget.snap['postId'], user.uid, widget.snap['likes']);
-                setState(() {
-                  isLikeAnimating = true;
-                });
+                if (isEditMode) {
+                  await FirestoreMethods().likePost(
+                      widget.snap['postId'], user.uid, widget.snap['likes']);
+                  setState(() {
+                    isLikeAnimating = true;
+                  });
+                } else {}
               },
               child: Stack(
                 alignment: Alignment.center,
@@ -303,299 +338,343 @@ class _PostCardState extends State<PostCard> {
             ),
 
             // LIKE COMMENT SECTION
-            Row(
-              children: [
-                LikeAnimation(
-                    isAnimating: widget.snap['likes'].contains(user.uid),
-                    smallLike: true,
-                    child: IconButton(
-                        onPressed: () async {
-                          await FirestoreMethods().likePost(
-                              widget.snap['postId'],
-                              user.uid,
-                              widget.snap['likes']);
-                        },
-                        icon: widget.snap['likes'].contains(user.uid)
-                            ? const Icon(
-                                Icons.favorite,
-                                color: Colors.red,
-                              )
-                            : const Icon(Icons.favorite_border))),
-                IconButton(
-                    onPressed: () {
-                      nextScreen(
-                          context,
-                          CommentsScreen(
-                            snap: widget.snap,
-                          ));
-                    },
-                    icon: const Icon(
-                      Icons.comment_outlined,
-                    )),
-                IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.send,
-                    )),
-                Expanded(
-                    child: Align(
-                  alignment: Alignment.bottomRight,
-                  // child: StreamBuilder<DocumentSnapshot>(
-                  //   stream: FirebaseFirestore.instance
-                  //       .collection('users')
-                  //       .doc(user.uid)
-                  //       .snapshots(),
-                  //   builder: (context, snapshot) {
-                  //     if (snapshot.connectionState == ConnectionState.waiting) {
-                  //       return const CircularProgressIndicator(); // Menampilkan loading saat data sedang dimuat
-                  //     }
-
-                  //     if (snapshot.hasError) {
-                  //       return Text('Error: ${snapshot.error.toString()}');
-                  //     }
-
-                  //     if (snapshot.hasData && snapshot.data!.exists) {
-                  //       final userData =
-                  //           snapshot.data!.data() as Map<String, dynamic>;
-                  //       final savedPosts =
-                  //           userData['savedPosts'] as List<dynamic>;
-
-                  //       // Ganti ikon berdasarkan apakah postId ada dalam savedPosts
-                  //       final isPostSaved =
-                  //           savedPosts.contains(widget.snap['postId']);
-
-                  //       return IconButton(
-                  //         icon: Icon(
-                  //           isPostSaved
-                  //               ? Icons.bookmark
-                  //               : Icons.bookmark_border,// Sesuaikan warna sesuai kebutuhan
-                  //         ),
-                  //         onPressed: () {
-                  //           // Tambah atau hapus postId dari savedPosts saat tombol diklik
-                  //           if (isPostSaved) {
-                  //             savedPosts.remove(widget.snap['postId']);
-                  //           } else {
-                  //             savedPosts.add(widget.snap['postId']);
-                  //           }
-
-                  //           // Perbarui data pengguna di Firestore
-                  //           FirebaseFirestore.instance
-                  //               .collection('users')
-                  //               .doc(user.uid)
-                  //               .update({'savedPosts': savedPosts});
-                  //         },
-                  //       );
-                  //     } else {
-                  //       return Text('User data not found.');
-                  //     }
-                  //   },
-                  // )
-                  child: StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(user.uid)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(); // Menampilkan loading saat data sedang dimuat
-                      }
-
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error.toString()}');
-                      }
-
-                      if (snapshot.hasData && snapshot.data!.exists) {
-                        final userData =
-                            snapshot.data!.data() as Map<String, dynamic>;
-                        final savedPosts =
-                            (userData['savedPosts'] as List<dynamic>?) ??
-                                []; // Periksa apakah field savedPosts ada
-
-                        final isPostSaved = savedPosts.contains(widget.snap['postId']);
-
-                        return IconButton(
-                          icon: Icon(
-                            isPostSaved
-                                ? Icons.bookmark
-                                : Icons.bookmark_border,
-                            // color: isPostSaved ? Colors.blue : Colors.black,
+            isEditMode
+                ? Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: captionEditController,
+                            decoration: const InputDecoration(
+                                hintStyle: TextStyle(fontSize: 14),
+                                hintText: 'Type your caption here..'),
                           ),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              setState(() {
+                                isEditMode = false;
+                              });
+                            },
+                            icon: Icon(Icons.close, color: Colors.red,)),
+                        IconButton(
+                            onPressed: () async {
+                              await FirebaseFirestore.instance
+                                  .collection('posts')
+                                  .doc(widget.snap['postId'])
+                                  .update({
+                                'description': captionEditController.text
+                              }).whenComplete(() {
+                                setState(() {
+                                  isEditMode = false;
+                                });
+                              });
+                            },
+                            icon: Icon(Icons.done, color: Colors.blue,))
+                      ],
+                    ),
+                  )
+                : Row(
+                    children: [
+                      LikeAnimation(
+                          isAnimating: widget.snap['likes'].contains(user.uid),
+                          smallLike: true,
+                          child: IconButton(
+                              onPressed: () async {
+                                await FirestoreMethods().likePost(
+                                    widget.snap['postId'],
+                                    user.uid,
+                                    widget.snap['likes']);
+                              },
+                              icon: widget.snap['likes'].contains(user.uid)
+                                  ? const Icon(
+                                      Icons.favorite,
+                                      color: Colors.red,
+                                    )
+                                  : const Icon(Icons.favorite_border))),
+                      IconButton(
                           onPressed: () {
-                            // Tambah atau hapus postId dari savedPosts saat tombol diklik
-                            if (isPostSaved) {
-                              savedPosts.remove(widget.snap['postId']);
-                            } else {
-                              savedPosts.add(widget.snap['postId']);
+                            nextScreen(
+                                context,
+                                CommentsScreen(
+                                  snap: widget.snap,
+                                ));
+                          },
+                          icon: const Icon(
+                            Icons.comment_outlined,
+                          )),
+                      IconButton(
+                          onPressed: () {},
+                          icon: const Icon(
+                            Icons.send,
+                          )),
+                      Expanded(
+                          child: Align(
+                        alignment: Alignment.bottomRight,
+                        // child: StreamBuilder<DocumentSnapshot>(
+                        //   stream: FirebaseFirestore.instance
+                        //       .collection('users')
+                        //       .doc(user.uid)
+                        //       .snapshots(),
+                        //   builder: (context, snapshot) {
+                        //     if (snapshot.connectionState == ConnectionState.waiting) {
+                        //       return const CircularProgressIndicator(); // Menampilkan loading saat data sedang dimuat
+                        //     }
+
+                        //     if (snapshot.hasError) {
+                        //       return Text('Error: ${snapshot.error.toString()}');
+                        //     }
+
+                        //     if (snapshot.hasData && snapshot.data!.exists) {
+                        //       final userData =
+                        //           snapshot.data!.data() as Map<String, dynamic>;
+                        //       final savedPosts =
+                        //           userData['savedPosts'] as List<dynamic>;
+
+                        //       // Ganti ikon berdasarkan apakah postId ada dalam savedPosts
+                        //       final isPostSaved =
+                        //           savedPosts.contains(widget.snap['postId']);
+
+                        //       return IconButton(
+                        //         icon: Icon(
+                        //           isPostSaved
+                        //               ? Icons.bookmark
+                        //               : Icons.bookmark_border,// Sesuaikan warna sesuai kebutuhan
+                        //         ),
+                        //         onPressed: () {
+                        //           // Tambah atau hapus postId dari savedPosts saat tombol diklik
+                        //           if (isPostSaved) {
+                        //             savedPosts.remove(widget.snap['postId']);
+                        //           } else {
+                        //             savedPosts.add(widget.snap['postId']);
+                        //           }
+
+                        //           // Perbarui data pengguna di Firestore
+                        //           FirebaseFirestore.instance
+                        //               .collection('users')
+                        //               .doc(user.uid)
+                        //               .update({'savedPosts': savedPosts});
+                        //         },
+                        //       );
+                        //     } else {
+                        //       return Text('User data not found.');
+                        //     }
+                        //   },
+                        // )
+                        child: StreamBuilder<DocumentSnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(user.uid)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return CircularProgressIndicator(); // Menampilkan loading saat data sedang dimuat
                             }
 
-                            // Perbarui data pengguna di Firestore
-                            FirebaseFirestore.instance
-                                .collection('users')
-                                .doc(user.uid)
-                                .update({'savedPosts': savedPosts});
-                          },
-                        );
-                      } else {
-                        return Text('User data not found.');
-                      }
-                    },
-                  )
+                            if (snapshot.hasError) {
+                              return Text(
+                                  'Error: ${snapshot.error.toString()}');
+                            }
 
-                  // widget.snap['savedPost'].contains(widget.snap['postId']) ? Icon(Icons.bookmark_border) : Icon(Icons.bookmark))
-                  ,
-                ))
-              ],
-            ),
+                            if (snapshot.hasData && snapshot.data!.exists) {
+                              final userData =
+                                  snapshot.data!.data() as Map<String, dynamic>;
+                              final savedPosts =
+                                  (userData['savedPosts'] as List<dynamic>?) ??
+                                      []; // Periksa apakah field savedPosts ada
+
+                              final isPostSaved =
+                                  savedPosts.contains(widget.snap['postId']);
+
+                              return IconButton(
+                                icon: Icon(
+                                  isPostSaved
+                                      ? Icons.bookmark
+                                      : Icons.bookmark_border,
+                                  // color: isPostSaved ? Colors.blue : Colors.black,
+                                ),
+                                onPressed: () {
+                                  // Tambah atau hapus postId dari savedPosts saat tombol diklik
+                                  if (isPostSaved) {
+                                    savedPosts.remove(widget.snap['postId']);
+                                  } else {
+                                    savedPosts.add(widget.snap['postId']);
+                                  }
+
+                                  // Perbarui data pengguna di Firestore
+                                  FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .update({'savedPosts': savedPosts});
+                                },
+                              );
+                            } else {
+                              return Text('User data not found.');
+                            }
+                          },
+                        )
+
+                        // widget.snap['savedPost'].contains(widget.snap['postId']) ? Icon(Icons.bookmark_border) : Icon(Icons.bookmark))
+                        ,
+                      ))
+                    ],
+                  ),
 
             // DESCRIPTION AND NUMBER OF COMMENTS
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  DefaultTextStyle(
-                    style: Theme.of(context)
-                        .textTheme
-                        .subtitle2!
-                        .copyWith(fontWeight: FontWeight.w800),
-                    child: InkWell(
-                      onTap: () {
-                        nextScreen(
-                            context,
-                            LikeScreen(
-                              snap: widget.snap,
-                              isCommentLike: false,
-                            ));
-                      },
-                      child: Text(
-                        widget.snap['likes'].length > 0
-                            ? "${widget.snap['likes'].length} likes"
-                            : "no likes",
-                        style: Theme.of(context).textTheme.bodyText2,
-                      ),
-                    ),
-                  ),
+            isEditMode
+                ? Container()
+                : Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DefaultTextStyle(
+                          style: Theme.of(context)
+                              .textTheme
+                              .subtitle2!
+                              .copyWith(fontWeight: FontWeight.w800),
+                          child: InkWell(
+                            onTap: () {
+                              nextScreen(
+                                  context,
+                                  LikeScreen(
+                                    snap: widget.snap,
+                                    isCommentLike: false,
+                                  ));
+                            },
+                            child: Text(
+                              widget.snap['likes'].length > 0
+                                  ? "${widget.snap['likes'].length} likes"
+                                  : "no likes",
+                              style: Theme.of(context).textTheme.bodyText2,
+                            ),
+                          ),
+                        ),
 
-                  widget.snap['description'].toString().isNotEmpty
-                      ? Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.only(top: 8),
-                          child: RichText(
-                              text: TextSpan(
-                                  style: const TextStyle(color: primaryColor),
-                                  children: [
-                                TextSpan(
-                                    text: widget.snap['username'],
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                TextSpan(
-                                  text: ' ${widget.snap['description']}',
-                                )
-                              ])),
-                        )
-                      : Container(),
-                  InkWell(
-                    onTap: () {
-                      nextScreen(context, CommentsScreen(snap: widget.snap));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        commentLen > 0
-                            ? 'View all $commentLen comments'
-                            : 'No comment recently',
-                        style: const TextStyle(
-                            color: secondaryColor),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 1,
-                  ),
-                  // commentLen > 0
-                  //     ? Column(
-                  //         children: [
-                  //           const SizedBox(
-                  //             height: 4,
-                  //           ),
-                  //           StreamBuilder(
-                  //             stream: FirebaseFirestore.instance
-                  //                 .collection('posts')
-                  //                 .doc(widget.snap['postId'])
-                  //                 .collection('comments')
-                  //                 .orderBy('datePublished', descending: true)
-                  //                 .limit(1)
-                  //                 .snapshots(),
-                  //             builder: (context, snapshot) {
-                  //               var snapshit = snapshot.data!.docs[0].data();
+                        widget.snap['description'].toString().isNotEmpty
+                            ? Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.only(top: 8),
+                                child: RichText(
+                                    text: TextSpan(
+                                        style: const TextStyle(
+                                            color: primaryColor),
+                                        children: [
+                                      TextSpan(
+                                          text: widget.snap['username'],
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      TextSpan(
+                                        text: ' ${widget.snap['description']}',
+                                      )
+                                    ])),
+                              )
+                            : Container(),
+                        InkWell(
+                          onTap: () {
+                            nextScreen(
+                                context, CommentsScreen(snap: widget.snap));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              commentLen > 0
+                                  ? 'View all $commentLen comments'
+                                  : 'No comment recently',
+                              style: const TextStyle(color: secondaryColor),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 1,
+                        ),
+                        // commentLen > 0
+                        //     ? Column(
+                        //         children: [
+                        //           const SizedBox(
+                        //             height: 4,
+                        //           ),
+                        //           StreamBuilder(
+                        //             stream: FirebaseFirestore.instance
+                        //                 .collection('posts')
+                        //                 .doc(widget.snap['postId'])
+                        //                 .collection('comments')
+                        //                 .orderBy('datePublished', descending: true)
+                        //                 .limit(1)
+                        //                 .snapshots(),
+                        //             builder: (context, snapshot) {
+                        //               var snapshit = snapshot.data!.docs[0].data();
 
-                  //               if (snapshot.connectionState ==
-                  //                   ConnectionState.waiting) {
-                  //                 return const Center(child: CircularProgressIndicator());
-                  //               }
-                  //               if (snapshot.hasError) {
-                  //                 return Text(snapshot.error.toString());
-                  //               }
+                        //               if (snapshot.connectionState ==
+                        //                   ConnectionState.waiting) {
+                        //                 return const Center(child: CircularProgressIndicator());
+                        //               }
+                        //               if (snapshot.hasError) {
+                        //                 return Text(snapshot.error.toString());
+                        //               }
 
-                  //               return Row(
-                  //                 crossAxisAlignment: CrossAxisAlignment.start,
-                  //                 children: [
-                  //                   Expanded(
-                  //                     child: Column(
-                  //                       crossAxisAlignment:
-                  //                           CrossAxisAlignment.start,
-                  //                       mainAxisAlignment:
-                  //                           MainAxisAlignment.center,
-                  //                       children: [
-                  //                         RichText(
-                  //                           text: TextSpan(
-                  //                             children: [
-                  //                               TextSpan(
-                  //                                   text: snapshit['name'],
-                  //                                   style: const TextStyle(
-                  //                                       fontWeight:
-                  //                                           FontWeight.bold)),
-                  //                               TextSpan(
-                  //                                 text: ' ${snapshit['text']}',
-                  //                               ),
-                  //                             ],
-                  //                           ),
-                  //                         ),
-                  //                       ],
-                  //                     ),
-                  //                   ),
-                  //                   SizedBox(
-                  //                     height: 20,
-                  //                     child: IconButton(
-                  //                         onPressed: () {},
-                  //                         icon: const Icon(
-                  //                           Icons.favorite,
-                  //                           size: 13,
-                  //                         )),
-                  //                   )
-                  //                 ],
-                  //               );
-                  //             },
-                  //           ),
-                  //           const SizedBox(
-                  //             height: 4,
-                  //           ),
-                  //         ],
-                  //       )
-                  //     : Container(),
-                  Container(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      DateFormat.yMMMd()
-                          .format(widget.snap['datePublished'].toDate()),
-                      style:
-                          const TextStyle(fontSize: 14, color: secondaryColor),
+                        //               return Row(
+                        //                 crossAxisAlignment: CrossAxisAlignment.start,
+                        //                 children: [
+                        //                   Expanded(
+                        //                     child: Column(
+                        //                       crossAxisAlignment:
+                        //                           CrossAxisAlignment.start,
+                        //                       mainAxisAlignment:
+                        //                           MainAxisAlignment.center,
+                        //                       children: [
+                        //                         RichText(
+                        //                           text: TextSpan(
+                        //                             children: [
+                        //                               TextSpan(
+                        //                                   text: snapshit['name'],
+                        //                                   style: const TextStyle(
+                        //                                       fontWeight:
+                        //                                           FontWeight.bold)),
+                        //                               TextSpan(
+                        //                                 text: ' ${snapshit['text']}',
+                        //                               ),
+                        //                             ],
+                        //                           ),
+                        //                         ),
+                        //                       ],
+                        //                     ),
+                        //                   ),
+                        //                   SizedBox(
+                        //                     height: 20,
+                        //                     child: IconButton(
+                        //                         onPressed: () {},
+                        //                         icon: const Icon(
+                        //                           Icons.favorite,
+                        //                           size: 13,
+                        //                         )),
+                        //                   )
+                        //                 ],
+                        //               );
+                        //             },
+                        //           ),
+                        //           const SizedBox(
+                        //             height: 4,
+                        //           ),
+                        //         ],
+                        //       )
+                        //     : Container(),
+                        Container(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(
+                            DateFormat.yMMMd()
+                                .format(widget.snap['datePublished'].toDate()),
+                            style: const TextStyle(
+                                fontSize: 14, color: secondaryColor),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            )
+                  )
           ],
         ));
   }
